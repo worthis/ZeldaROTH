@@ -46,53 +46,63 @@ void Audio::setVolume(int volume) {
 }
 
 void Audio::setVolson(int volson) {
-    for (int i = 0; i < 40; i++)
-		Mix_VolumeChunk(sons[i], volson);
+    if (volson < 0 || volson > MIX_MAX_VOLUME) {
+        fprintf(stderr, "Volume out of range. It must be between 0 and %d\n", MIX_MAX_VOLUME);
+        return;
+    }
+
+    for (int i = 0; i < 40; i++) {
+        if (!sons[i]) {
+            fprintf(stderr, "Audio chunk at index %d is null. SDL Error: %s\n", i, SDL_GetError());
+            continue;
+        }
+        Mix_VolumeChunk(sons[i], volson);
+    }
 }
 
 void Audio::loadSounds() {
     sons = new Mix_Chunk*[40];
 
-    sons[0] = Mix_LoadWAV("data/sound/text.ogg"); // lettres
-    sons[1] = Mix_LoadWAV("data/sound/menu1.ogg"); // menu 1
-    sons[2] = Mix_LoadWAV("data/sound/menu2.ogg"); // menu 2
-    sons[3] = Mix_LoadWAV("data/sound/menu3.ogg"); // menu 3
-    sons[4] = Mix_LoadWAV("data/sound/menu4.ogg"); // menu 4
-    sons[5] = Mix_LoadWAV("data/sound/timewarp.ogg"); // time retour
-    sons[6] = Mix_LoadWAV("data/sound/tombe.ogg"); // tombe (ennemi)
-    sons[7] = Mix_LoadWAV("data/sound/hitenemy.ogg"); //shot 1
-    sons[8] = Mix_LoadWAV("data/sound/killenemy.ogg"); // shot 2
-    sons[9] = Mix_LoadWAV("data/sound/surprise.ogg"); // surprise
-    sons[10] = Mix_LoadWAV("data/sound/monte.ogg"); // monte
-    sons[11] = Mix_LoadWAV("data/sound/descend.ogg"); // descend
-    sons[12] = Mix_LoadWAV("data/sound/chute.ogg"); // chute
-    sons[13] = Mix_LoadWAV("data/sound/item.ogg"); // item
-    sons[14] = Mix_LoadWAV("data/sound/rupee.ogg"); // rubis
-    sons[15] = Mix_LoadWAV("data/sound/heart.ogg"); // coeur
-    sons[16] = Mix_LoadWAV("data/sound/bomb.ogg"); // bombe
-    sons[17] = Mix_LoadWAV("data/sound/textnext.ogg"); // suite texte
-    sons[18] = Mix_LoadWAV("data/sound/textend.ogg"); // fin texte
-    sons[19] = Mix_LoadWAV("data/sound/happy.ogg"); // trouve objet
-    sons[20] = Mix_LoadWAV("data/sound/door.ogg"); // ouvre porte
-    sons[21] = Mix_LoadWAV("data/sound/pics.ogg"); // pics contre mur
-    sons[22] = Mix_LoadWAV("data/sound/sword.ogg"); // Epée
-    sons[23] = Mix_LoadWAV("data/sound/SwordCharging.ogg"); // chargée
-    sons[24] = Mix_LoadWAV("data/sound/Sword360.ogg"); // spin
-    sons[25] = Mix_LoadWAV("data/sound/shoot.ogg"); // flèche
-    sons[26] = Mix_LoadWAV("data/sound/hookshot.ogg"); // grappin
-    sons[27] = Mix_LoadWAV("data/sound/stamp.ogg"); // pose bombe
-    sons[28] = Mix_LoadWAV("data/sound/magic.ogg"); // magie
-    sons[29] = Mix_LoadWAV("data/sound/burn.ogg"); // brËšle
-    sons[30] = Mix_LoadWAV("data/sound/hammer.ogg"); // marteau
-    sons[31] = Mix_LoadWAV("data/sound/plouf.ogg"); // plouf
-    sons[32] = Mix_LoadWAV("data/sound/danger.ogg"); // danger
-    sons[33] = Mix_LoadWAV("data/sound/hurt.ogg"); // link se blesse
-    sons[34] = Mix_LoadWAV("data/sound/porte.ogg"); // porte objet
-    sons[35] = Mix_LoadWAV("data/sound/lance.ogg"); // lance objet
-    sons[36] = Mix_LoadWAV("data/sound/casse.ogg"); // casse objet
-    sons[37] = Mix_LoadWAV("data/sound/charge.ogg"); // charge magie
-    sons[38] = Mix_LoadWAV("data/sound/buisson.ogg"); // coupe buisson
-    sons[39] = Mix_LoadWAV("data/sound/pousse.ogg"); // pousse caisse
+    sons[0] = Mix_LoadWAV("data/sound/text.wav"); // lettres
+    sons[1] = Mix_LoadWAV("data/sound/menu1.wav"); // menu 1
+    sons[2] = Mix_LoadWAV("data/sound/menu2.wav"); // menu 2
+    sons[3] = Mix_LoadWAV("data/sound/menu3.wav"); // menu 3
+    sons[4] = Mix_LoadWAV("data/sound/menu4.wav"); // menu 4
+    sons[5] = Mix_LoadWAV("data/sound/timewarp.wav"); // time retour
+    sons[6] = Mix_LoadWAV("data/sound/tombe.wav"); // tombe (ennemi)
+    sons[7] = Mix_LoadWAV("data/sound/hitenemy.wav"); //shot 1
+    sons[8] = Mix_LoadWAV("data/sound/killenemy.wav"); // shot 2
+    sons[9] = Mix_LoadWAV("data/sound/surprise.wav"); // surprise
+    sons[10] = Mix_LoadWAV("data/sound/monte.wav"); // monte
+    sons[11] = Mix_LoadWAV("data/sound/descend.wav"); // descend
+    sons[12] = Mix_LoadWAV("data/sound/chute.wav"); // chute
+    sons[13] = Mix_LoadWAV("data/sound/item.wav"); // item
+    sons[14] = Mix_LoadWAV("data/sound/rupee.wav"); // rubis
+    sons[15] = Mix_LoadWAV("data/sound/heart.wav"); // coeur
+    sons[16] = Mix_LoadWAV("data/sound/bomb.wav"); // bombe
+    sons[17] = Mix_LoadWAV("data/sound/textnext.wav"); // suite texte
+    sons[18] = Mix_LoadWAV("data/sound/textend.wav"); // fin texte
+    sons[19] = Mix_LoadWAV("data/sound/happy.wav"); // trouve objet
+    sons[20] = Mix_LoadWAV("data/sound/door.wav"); // ouvre porte
+    sons[21] = Mix_LoadWAV("data/sound/pics.wav"); // pics contre mur
+    sons[22] = Mix_LoadWAV("data/sound/sword.wav"); // Epée
+    sons[23] = Mix_LoadWAV("data/sound/SwordCharging.wav"); // chargée
+    sons[24] = Mix_LoadWAV("data/sound/Sword360.wav"); // spin
+    sons[25] = Mix_LoadWAV("data/sound/shoot.wav"); // flèche
+    sons[26] = Mix_LoadWAV("data/sound/hookshot.wav"); // grappin
+    sons[27] = Mix_LoadWAV("data/sound/stamp.wav"); // pose bombe
+    sons[28] = Mix_LoadWAV("data/sound/magic.wav"); // magie
+    sons[29] = Mix_LoadWAV("data/sound/burn.wav"); // brËšle
+    sons[30] = Mix_LoadWAV("data/sound/hammer.wav"); // marteau
+    sons[31] = Mix_LoadWAV("data/sound/plouf.wav"); // plouf
+    sons[32] = Mix_LoadWAV("data/sound/danger.wav"); // danger
+    sons[33] = Mix_LoadWAV("data/sound/hurt.wav"); // link se blesse
+    sons[34] = Mix_LoadWAV("data/sound/porte.wav"); // porte objet
+    sons[35] = Mix_LoadWAV("data/sound/lance.wav"); // lance objet
+    sons[36] = Mix_LoadWAV("data/sound/casse.wav"); // casse objet
+    sons[37] = Mix_LoadWAV("data/sound/charge.wav"); // charge magie
+    sons[38] = Mix_LoadWAV("data/sound/buisson.wav"); // coupe buisson
+    sons[39] = Mix_LoadWAV("data/sound/pousse.wav"); // pousse caisse
 }
 
 void Audio::freeSounds() {
@@ -131,34 +141,34 @@ void Audio::replayMusic() {
 
 Mix_Music* Audio::choixMusique(int id) {
     switch (id) {
-        case 1 : return Mix_LoadMUS("data/music/Foret.mid");
-        case 2 : return Mix_LoadMUS("data/music/Plaine.mid");
-        case 3 : return Mix_LoadMUS("data/music/Lac.mid");
-        case 4 : return Mix_LoadMUS("data/music/Mont.mid");
-        case 5 : return Mix_LoadMUS("data/music/Desert.mid");
-        case 6 : return Mix_LoadMUS("data/music/Ombre.mid");
-        case 7 : return Mix_LoadMUS("data/music/Feu.mid");
-        case 8 : return Mix_LoadMUS("data/music/Cocorico.mid");
-        case 9 : return Mix_LoadMUS("data/music/Chateau.mid");
-        case 10 : case 11 : return Mix_LoadMUS("data/music/Secret.mid");
-        case 12 : case 13 : case 14 : return Mix_LoadMUS("data/music/Donjon1.mid");
-        case 15 : return Mix_LoadMUS("data/music/DDesert.mid");
-        case 16 : case 17 : case 18 : return Mix_LoadMUS("data/music/Donjon2.mid");
-        case 19 : return Mix_LoadMUS("data/music/DSecret.mid");
-        case 20 : return Mix_LoadMUS("data/music/DFinal.mid");
-        case 21 : return Mix_LoadMUS("data/music/Home.mid");
-        case 22 : case 23 : return Mix_LoadMUS("data/music/Cave.mid");
-        case 24 : case 25 : case 26 : case 27 : return Mix_LoadMUS("data/music/Fee.mid"); break;
+        case 1 : return Mix_LoadMUS("data/music/Foret.mp3");
+        case 2 : return Mix_LoadMUS("data/music/Plaine.mp3");
+        case 3 : return Mix_LoadMUS("data/music/Lac.mp3");
+        case 4 : return Mix_LoadMUS("data/music/Mont.mp3");
+        case 5 : return Mix_LoadMUS("data/music/Desert.mp3");
+        case 6 : return Mix_LoadMUS("data/music/Ombre.mp3");
+        case 7 : return Mix_LoadMUS("data/music/Feu.mp3");
+        case 8 : return Mix_LoadMUS("data/music/Cocorico.mp3");
+        case 9 : return Mix_LoadMUS("data/music/Chateau.mp3");
+        case 10 : case 11 : return Mix_LoadMUS("data/music/Secret.mp3");
+        case 12 : case 13 : case 14 : return Mix_LoadMUS("data/music/Donjon1.mp3");
+        case 15 : return Mix_LoadMUS("data/music/DDesert.mp3");
+        case 16 : case 17 : case 18 : return Mix_LoadMUS("data/music/Donjon2.mp3");
+        case 19 : return Mix_LoadMUS("data/music/DSecret.mp3");
+        case 20 : return Mix_LoadMUS("data/music/DFinal.mp3");
+        case 21 : return Mix_LoadMUS("data/music/Home.mp3");
+        case 22 : case 23 : return Mix_LoadMUS("data/music/Cave.mp3");
+        case 24 : case 25 : case 26 : case 27 : return Mix_LoadMUS("data/music/Fee.mp3"); break;
 //case 28 : case 32 : case 35 : case 36 : case 38 : case 41 : case 42 : case 43 : case 44 :
-//    return Mix_LoadMUS("data/music/Maison.mid"); break;
-        case 29 : case 37 : case 40 : return Mix_LoadMUS("data/music/Potion.mid"); break;
-        case 30 : return Mix_LoadMUS("data/music/Bar.mid"); break;
-        case 31 : return Mix_LoadMUS("data/music/Magasin.mid"); break;
-        case 33 : case 34 : case 39 : return Mix_LoadMUS("data/music/Jeu.mid"); break;
-        case 45 : return Mix_LoadMUS("data/music/Titre.mid"); break;
-        case 46 : return Mix_LoadMUS("data/music/Selection.mid"); break;
-        case 47 : return Mix_LoadMUS("data/music/Debut.mid"); break;
-        default : return Mix_LoadMUS("data/music/Maison.mid");
+//    return Mix_LoadMUS("data/music/Maison.mp3"); break;
+        case 29 : case 37 : case 40 : return Mix_LoadMUS("data/music/Potion.mp3"); break;
+        case 30 : return Mix_LoadMUS("data/music/Bar.mp3"); break;
+        case 31 : return Mix_LoadMUS("data/music/Magasin.mp3"); break;
+        case 33 : case 34 : case 39 : return Mix_LoadMUS("data/music/Jeu.mp3"); break;
+        case 45 : return Mix_LoadMUS("data/music/Titre.mp3"); break;
+        case 46 : return Mix_LoadMUS("data/music/Selection.mp3"); break;
+        case 47 : return Mix_LoadMUS("data/music/Debut.mp3"); break;
+        default : return Mix_LoadMUS("data/music/Maison.mp3");
     }
 }
 
@@ -184,12 +194,12 @@ void Audio::stopSpecial() {
 
 Mix_Music* Audio::choixSpecial(int id) {
     switch (id) {
-        case 1 : return Mix_LoadMUS("data/music/Boss.mid");
-        case 2 : return Mix_LoadMUS("data/music/Mort.mid");
-        case 3 : return Mix_LoadMUS("data/music/Epee.mid");
-        case 4 : return Mix_LoadMUS("data/music/BossF.mid");
-        case 5 : return Mix_LoadMUS("data/music/Fin.mid");
-        default : return Mix_LoadMUS("data/music/Boss.mid");
+        case 1 : return Mix_LoadMUS("data/music/Boss.mp3");
+        case 2 : return Mix_LoadMUS("data/music/Mort.mp3");
+        case 3 : return Mix_LoadMUS("data/music/Epee.mp3");
+        case 4 : return Mix_LoadMUS("data/music/BossF.mp3");
+        case 5 : return Mix_LoadMUS("data/music/Fin.mp3");
+        default : return Mix_LoadMUS("data/music/Boss.mp3");
     }
 }
 

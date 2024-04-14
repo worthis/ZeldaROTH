@@ -4,14 +4,14 @@
 #--------------------------------------------------------------
 
 PREFIX  = /usr/local
-CFLAGS  = -O2 -Wall
-LDFLAGS = -lSDL_gfx -lSDL_image -lSDL_mixer -lSDL
+CFLAGS  = -I../../SDL_gfx-1.2-master -I/opt/miyoomini-toolchain/arm-linux-gnueabihf/libc/usr/include/SDL -O2 -Wall
+LDFLAGS =  -L../../SDL_gfx-1.2-master/.libs -lSDL_gfx -lSDL_image -lSDL_mixer -lSDL
 
-CC = g++
+CC = arm-linux-gnueabihf-g++
 RM = rm -f
 INSTALL_PROG = install -m 755 -s
 
-EXE = ZeldaROTH_US
+EXE = ../Zelda
 
 OBJS = Audio.o Bouclier.o Caisse.o Carte.o Encyclopedie.o Ennemi.o Generique.o Jeu.o Joueur.o Keyboard.o Listable.o main.o Menu.o Monde.o Objet.o Personnage.o Pnj.o Projectile.o Snipe.o Statut.o Texte.o ZoneRect.o
 

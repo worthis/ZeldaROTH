@@ -80,7 +80,6 @@ int Keyboard::gererClavier() {
     }
     keys = SDL_GetKeyState(NULL);
     pollKeys(keys);
-    
     return 0;
 }
 
@@ -94,20 +93,17 @@ void Keyboard::toggleFullScreen() {
 int Keyboard::pollKey(SDL_Event event) {
     switch (event.key.keysym.sym) {
         case SDLK_ESCAPE :
-            if (mode==0) { if (!gpJeu->getStop() && !gpJeu->getJoueur()->getImmo() 
-            && gpJeu->getJoueur()->getVie()>0) 
-                gpJeu->ecrit(215);
+            if (mode==0) { 
+                if (!gpJeu->getStop() && !gpJeu->getJoueur()->getImmo() && gpJeu->getJoueur()->getVie()>0) {
+                    gpJeu->ecrit(215);
+                }
             } else if (mode<8 || mode==9 || mode==15 || mode==16 || mode >18) return -1;
             break;
-        case SDLK_F1 :
-            if (mode == 0) {mode = 17; gpJeu->getGenerique()->initAide1(); 
-                gpJeu->getAudio()->playSound(1);}
-            break;
-        case SDLK_F4 :
-            if (event.key.keysym.mod & KMOD_ALT) return -1;
-            break;
-        case SDLK_RETURN :
-            if (event.key.keysym.mod & KMOD_CTRL) toggleFullScreen();
+        case SDLK_RCTRL :
+            if (mode == 0) {
+                mode = 17; gpJeu->getGenerique()->initAide1(); 
+                gpJeu->getAudio()->playSound(1);
+            }
             break;
         default : break;
     }
@@ -179,14 +175,14 @@ void Keyboard::pollKeys(Uint8* keys) {
             if (keys[SDLK_RIGHT]) nbdir++;
             
             int vitesse;
-            if ((keys[SDLK_CAPSLOCK] || keys[SDLK_LSHIFT]) && !gpJeu->getStop() 
+            if ((keys[SDLK_t]) && !gpJeu->getStop() 
             && gpJoueur->hasObjet(O_BOTTES)) vitesse=4; 
             else vitesse=2;
     
             avance=0;
             
             //marche
-            if (!keys[SDLK_LCTRL] && (
+            if (!keys[SDLK_BACKSPACE] && (
             gpJoueur->getTypeAnim()==AUCUNE || gpJoueur->getTypeAnim()==MARCHE 
             || gpJoueur->getTypeAnim()==PORTE || gpJoueur->getTypeAnim()==EMMENE
             || gpJoueur->getTypeAnim()==NAGE || gpJoueur->getTypeAnim()==FLOTTE) 
@@ -249,7 +245,7 @@ void Keyboard::pollKeys(Uint8* keys) {
                     else gpJeu->setVueVert(0);
                 }
             }
-            if (keys[SDLK_LCTRL] && !gpJoueur->getImmo()) {
+            if (keys[SDLK_BACKSPACE] && !gpJoueur->getImmo()) {
                 if (keys[SDLK_LEFT] && gpJeu->getVueHorz()>-64)
                     gpJeu->setVueHorz(gpJeu->getVueHorz()-2);
                 if (keys[SDLK_RIGHT] && gpJeu->getVueHorz()<64)
@@ -276,18 +272,18 @@ void Keyboard::pollKeys(Uint8* keys) {
             }
             
             
-            //épée
+            //ï¿½pï¿½e
             if ((gpJoueur->getTypeAnim()==AUCUNE || gpJoueur->getTypeAnim()==MARCHE) 
             && !gpJoueur->getCharge() && gpJoueur->getEpee() && !gpJeu->getStop()
             && !gpJoueur->isLapin() && !gpJoueur->getImmo()) {
-                if ((keys[SDLK_z] || keys[SDLK_w]) && !tmpw) {
+                if (keys[SDLK_SPACE] && !tmpw) {
                     gpJoueur->setTypeAnim(EPEE);
                     gpJoueur->chargeSpin();
                     tmpw=1;
                 }
-                if (!keys[SDLK_z] && !keys[SDLK_w] && tmpw) tmpw=0;
+                if (!keys[SDLK_SPACE] && tmpw) tmpw=0;
             }
-            if (!keys[SDLK_z] && !keys[SDLK_w] && gpJoueur->getCharge() && !gpJeu->getStop() 
+            if (!keys[SDLK_SPACE] && gpJoueur->getCharge() && !gpJeu->getStop() 
             && !gpJoueur->isLapin()) {
                 if (gpJoueur->getCharge() >= 20) gpJoueur->setTypeAnim(SPIN);
                 gpJoueur->dechargeSpin();
@@ -329,7 +325,7 @@ void Keyboard::pollKeys(Uint8* keys) {
             
             
             
-            if (keys[SDLK_x] && (
+            if (keys[SDLK_LSHIFT] && (
             gpJoueur->getTypeAnim()==AUCUNE || gpJoueur->getTypeAnim()==MARCHE || 
             (gpJoueur->getObjet()==8 && 
             (gpJoueur->getTypeAnim()==PORTE || gpJoueur->getTypeAnim()==EMMENE))) 
@@ -378,9 +374,9 @@ void Keyboard::pollKeys(Uint8* keys) {
                 }    
             }
             
-            if (!keys[SDLK_x] && tmpx) tmpx=0;
+            if (!keys[SDLK_LSHIFT] && tmpx) tmpx=0;
             
-            if (keys[SDLK_c] && !tmpc && !gpJoueur->getCharge() && gpJoueur->getVie()>0
+            if (keys[SDLK_LCTRL] && !tmpc && !gpJoueur->getCharge() && gpJoueur->getVie()>0
             && !gpJoueur->isLapin() && !gpJeu->getStop() && !gpJoueur->getImmo()) {
                 if (gpJoueur->getTypeAnim()==AUCUNE || gpJoueur->getTypeAnim()==MARCHE)
                     gpJeu->ramasse();
@@ -388,15 +384,15 @@ void Keyboard::pollKeys(Uint8* keys) {
                     gpJoueur->setTypeAnim(LANCE);
             }
             
-            if (!keys[SDLK_c] && tmpc) tmpc=0;
+            if (!keys[SDLK_LCTRL] && tmpc) tmpc=0;
             
-            if (keys[SDLK_SPACE] && !gpJeu->getStop() && gpJoueur->getVie() && 
+            if (keys[SDLK_LALT] && !gpJeu->getStop() && gpJoueur->getVie() && 
             (gpJoueur->getTypeAnim()==AUCUNE || gpJoueur->getTypeAnim()==MARCHE) 
              && !gpJoueur->getImmo()) {
                 gpJeu->lire();
             }
             
-            if (keys[SDLK_p] && gpJoueur->hasObjet(O_CARTE) && 
+            if (keys[SDLK_TAB] && gpJoueur->hasObjet(O_CARTE) && 
             (gpJeu->isDehors() || gpJeu->isDonjon())
             && !gpJeu->getStop() && gpJoueur->getVie()>0 && !tmpp) {
                 mode = 12;
@@ -405,9 +401,9 @@ void Keyboard::pollKeys(Uint8* keys) {
                 tmpp=1;
             }
             
-            if (!keys[SDLK_p] && tmpp) tmpp=0;
+            if (!keys[SDLK_TAB] && tmpp) tmpp=0;
             
-            if ((keys[SDLK_m] || keys[SDLK_SEMICOLON]) && gpJoueur->hasObjet(O_ENCYCL)
+            if ((keys[SDLK_e] || keys[SDLK_SEMICOLON]) && gpJoueur->hasObjet(O_ENCYCL)
             && !gpJeu->getStop() && gpJoueur->getVie()>0 && !tmpm) {
                 mode = 13;
                 gpJeu->getAudio()->playSound(1);
@@ -416,7 +412,7 @@ void Keyboard::pollKeys(Uint8* keys) {
                 tmpm=1;
             }
             
-            if (!(keys[SDLK_m] || keys[SDLK_SEMICOLON]) && tmpm) tmpm=0;
+            if (!(keys[SDLK_e] || keys[SDLK_SEMICOLON]) && tmpm) tmpm=0;
             break;
         case 1 :
             if (keys[SDLK_RETURN] && tmp == 0) {

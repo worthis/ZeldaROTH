@@ -105,11 +105,11 @@ void Texte::chercheText() {
         case 64 : texte = "W: Turtle Rock*E: Lake Hylia"; break;
         case 65 : texte = "Hidden Temple**Here rests the Sword of Evils Bane, the Master Sword."; break;
         case 66 : texte = "N: To the Haunted Graveyard"; break;
-        case 67 : texte = "You find the Dungeon Map!!!*Press P to see the map."; break;
+        case 67 : texte = "You find the Dungeon Map!!!*Press L2 to see the map."; break;
         case 68 : texte = "You find the Compass!!!*You can locate the boss and chests on the plan."; break;
         case 69 : texte = "You find the Boss Key!!!"; break;
         case 70 : texte = "You find a small key!!!*Go near a door to open it."; break;
-        case 71 : texte = "You find the Gloves!!!*Use them to lift some object setting them up or pressing C."; break;
+        case 71 : texte = "You find the Gloves!!!*Use them to lift some object setting them up or pressing B."; break;
         case 72 : 
             texte = "You find a Magic Crystal!!!"; 
             tmp = 7-gpJeu->getJoueur()->nbCristaux();
@@ -282,7 +282,7 @@ void Texte::chercheText() {
         case 192 : texte = "Unfortunately, I'm really too fearful to meet them, so I need your help."; idsuiv=193; break;
         case 193 : texte = "You have to fight each kind of monster and come to give me your report."; idsuiv=194; break;
         case 194 : texte = "Each time you have defeated 7 new kinds of enemies, I will give you one piece of heart."; idsuiv=195; break;
-        case 195 : texte = "If you want to see what enemies you've already defeated, press M."; break;
+        case 195 : texte = "If you want to see what enemies you've already defeated, press L1."; break;
         
         
         case 196 : 
@@ -334,7 +334,7 @@ void Texte::chercheText() {
         case 233 : texte = "Help me!*Help me!*That's me! Zelda!*I'm talking to you by telepathy."; idsuiv = 234; break;
         case 234 : texte = "I am a prisoner in the dungeon of the castle!*I need your help!*Ganon is back, and he surely has already found the Triforce..."; idsuiv=235; break;
         case 235 : texte = "Come quickly to the castle Link, you are my only hope..."; break;
-        case 236 : texte = "HELP: Press F1 to consult help."; break;
+        case 236 : texte = "HELP: Press SELECT to consult help."; break;
     }
     
     
@@ -447,22 +447,22 @@ void Texte::setTexte(int idTxt, int vx, int vy, int vw, int vh, bool cadr, bool 
 }
 
 void Texte::decoupeText() {
-    //compte le nombre de caractères possibles et largeur et en hauteur
+    //compte le nombre de caractï¿½res possibles et largeur et en hauteur
     int nbcol = (w-16)/6 -1;
     int nblig = (h-16)/16;
     int tailleMax = nbcol * nblig;
     int taille;
     
-    //parcours du texte à afficher; à chaque début de mot, 
-    //vérifie que le mot peut tenir sur la ligne
+    //parcours du texte ï¿½ afficher; ï¿½ chaque dï¿½but de mot, 
+    //vï¿½rifie que le mot peut tenir sur la ligne
     for (int i = 0; i < (int)texte.length(); i++) {
         
-        //supprime les espaces isolés en début de ligne
+        //supprime les espaces isolï¿½s en dï¿½but de ligne
         if (texte.at(i)==' ' && texte.at(i+1)!=' ' && i%nbcol == 0) texte.erase(i,1);
-        //recherche du début du prochain mot
+        //recherche du dï¿½but du prochain mot
         while(texte.at(i)==' ' && i < (int)texte.length()-1) i++;
         
-        //saute une ligne si trouve une étoile
+        //saute une ligne si trouve une ï¿½toile
         if (texte.at(i)=='*') {
             texte.erase(i,1);//replace(i, 1, " ");
             int nb = (nbcol)-(i%(nbcol));
@@ -470,7 +470,7 @@ void Texte::decoupeText() {
             continue;
         }
         
-        //si le mot dépasse
+        //si le mot dï¿½passe
         taille = tailleMot(i);
         if ((i%nbcol)+taille>nbcol) {
             if  (i < tailleMax) {
@@ -479,7 +479,7 @@ void Texte::decoupeText() {
                     texte.insert(((i/nbcol)+1)*nbcol-1,"--");
                     i = 1+((i/nbcol)+1)*nbcol;
                 }
-                //sinon, on ajoute des espaces pour faire commencer le mot à la ligne
+                //sinon, on ajoute des espaces pour faire commencer le mot ï¿½ la ligne
                 else while((i%nbcol) != 0) {texte.insert(i," "); i++;}
             }
         }
@@ -528,35 +528,35 @@ void Texte::afficheLettre(SDL_Surface* gpScreen, char c, int vx, int vy) {
             
     //majuscules A-Z
     if(val>=65 && val<=90) {src.x=6+16*((val-65)%10); src.y=2+16*((val-65)/10);}   
-    // ç
+    // ï¿½
     if(val==-25) {src.x=148;src.y=34;}
-    // é
+    // ï¿½
     if(val==-23) {src.x=100;src.y=84;}
-    // ê
+    // ï¿½
     if(val==-22) {src.x=116;src.y=84;}
-    // è
+    // ï¿½
     if(val==-24) {src.x=132;src.y=84;}
-    // ë
+    // ï¿½
     if(val==-21) {src.x=132;src.y=151;}
-    // à
+    // ï¿½
     if(val==-32) {src.x=148;src.y=84;}
-    // â
+    // ï¿½
     if(val==-30) {src.x=148;src.y=103;}
-    // ä
+    // ï¿½
     if(val==-28) {src.x=148;src.y=135;}
-    // î
+    // ï¿½
     if(val==-18) {src.x=84;src.y=119;}
-    // ï
+    // ï¿½
     if(val==-17) {src.x=116;src.y=151;}
-    // û
+    // ï¿½
     if(val==-5) {src.x=84;src.y=103;}
-    // ù
+    // ï¿½
     if(val==-7) {src.x=148;src.y=151;}
-    // ü
+    // ï¿½
     if(val==-4) {src.x=116;src.y=135;}
-    // ö
+    // ï¿½
     if(val==-10) {src.x=132;src.y=135;}
-    // ô
+    // ï¿½
     if(val==-12) {src.x=148;src.y=119;}
             
     //ponctuation
