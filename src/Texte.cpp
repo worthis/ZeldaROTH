@@ -11,6 +11,8 @@
 #include <SDL/SDL.h>
 #include <SDL/SDL_image.h>
 
+#include "UTF8Utils.h"
+
 #include "Texte.h"
 #include "Menu.h"
 #include "Joueur.h"
@@ -18,604 +20,1174 @@
 #include "Projectile.h"
 #include "Jeu.h"
 
-Texte::Texte(Jeu* jeu) : gpJeu(jeu), vitesse(40), av(0), x(0), y(0), w(0), h(0),
-id(0), idsuiv(0), def(false), cadre(false), texte(""), buffer("") {
+Texte::Texte(Jeu *jeu) : gpJeu(jeu), vitesse(40), av(0), x(0), y(0), w(0), h(0),
+                         id(0), idsuiv(0), def(false), cadre(false), texte(""), buffer("")
+{
     lastAnimTime = SDL_GetTicks();
     imageFont = IMG_Load("data/images/texte/font.png");
-    SDL_SetColorKey(imageFont,SDL_SRCCOLORKEY,SDL_MapRGB(imageFont->format,0,0,255));
+    SDL_SetColorKey(imageFont, SDL_SRCCOLORKEY, SDL_MapRGB(imageFont->format, 0, 0, 255));
     imageCoeur = IMG_Load("data/images/menu/coeur.png");
-    SDL_SetColorKey(imageCoeur,SDL_SRCCOLORKEY,SDL_MapRGB(imageCoeur->format,0,0,255));
+    SDL_SetColorKey(imageCoeur, SDL_SRCCOLORKEY, SDL_MapRGB(imageCoeur->format, 0, 0, 255));
+
+    fontSize = 15;
+    charWidth = 7;
+    fontName = "data/images/texte/font.ttf";
+    textColorFG = {248, 248, 248};
+    textColorBG = {0, 0, 112};
+
+    textFontFG = TTF_OpenFont(fontName.c_str(), fontSize);
+    TTF_SetFontKerning(textFontFG, 0);
+    TTF_SetFontHinting(textFontFG, TTF_HINTING_MONO);
+    TTF_SetFontStyle(textFontFG, TTF_STYLE_NORMAL);
+    textFontBG = TTF_OpenFont(fontName.c_str(), fontSize);
+    TTF_SetFontKerning(textFontBG, 0);
+    TTF_SetFontHinting(textFontBG, TTF_HINTING_MONO);
+    TTF_SetFontStyle(textFontBG, TTF_STYLE_NORMAL);
+    TTF_SetFontOutline(textFontBG, 1);
 }
 
-Texte::~Texte() {
+Texte::~Texte()
+{
     SDL_FreeSurface(imageFont);
     SDL_FreeSurface(imageCoeur);
+
+    TTF_CloseFont(textFontFG);
+    TTF_CloseFont(textFontBG);
 }
 
-void Texte::chercheText() {
+void Texte::chercheText()
+{
     ostringstream os;
     int tmp;
-    switch (id) {
-        case 1  : texte = "You find a shield!!!**Your defense rises by one point!"; break;
-        case 2  : texte = "You find a sword!!!**You can now fight monsters with the key Z (or W)!!!*Hold Z to charge a spin attack!!!"; break;
-        case 3  : 
-            tmp = 4-(gpJeu->getJoueur()->nbQuarts()%4);
-            os << tmp;
-            texte = "You find a piece of heart!!!";
-            if (tmp<4) buffer = "Again "+os.str()+" before having a new heart!!!";
-            else buffer = "Your heart count just increases!!!";
+    switch (id)
+    {
+    case 1:
+        texte = "Ты нашел щит!!!**Твоя защита увеличилась на одно очко!";
+        break;
+    case 2:
+        texte = "Ты нашел меч!!!**Теперь ты можешь сражаться с монстрами нажатием кнопки A!!!*Удерживай кнопку A, чтобы зарядить круговой удар!!!";
+        break;
+    case 3:
+        tmp = 4 - (gpJeu->getJoueur()->nbQuarts() % 4);
+        os << tmp;
+        texte = "Ты нашел частицу сердца!!!";
+        if (tmp == 1)
+        {
+            buffer = "Найди еще одну частицу, чтобы получить дополнительное сердце!!!";
+        }
+        else if (tmp < 4)
+        {
+            buffer = "Найди еще " + os.str() + " частицы, чтобы получить дополнительное сердце!!!";
+        }
+        else
+        {
+            buffer = "Твое количество сердец увеличилось!!!";
+        }
+        break;
+    case 11:
+        texte = "С: Дом Линка*З: Поля Хайрула*В: Лесной Храм";
+        break;
+    case 12:
+        texte = "Горный Храм**Не для слабонервных, трусливых и вообще малодушных.";
+        break;
+    case 13:
+        texte = "З: Выход в Пустыню*С: Горный Храм";
+        break;
+    case 14:
+        texte = "С: Горный Храм*Ю: Поля Хайрула";
+        break;
+    case 15:
+        texte = "С: Гора Смерти";
+        break;
+    case 16:
+        texte = "В: Проход в Лес";
+        break;
+    case 17:
+        texte = "Ю: Озеро Хайлия*В: Кладбище с привидениями";
+        break;
+    case 18:
+        texte = "Ю: Какарико";
+        break;
+    case 19:
+        texte = "С: Какарико";
+        break;
+    case 20:
+        texte = "С: Поля Хайрула";
+        break;
+    case 21:
+        texte = "З: Огненные Земли";
+        break;
+    case 22:
+        texte = "В: Деревня Теней*- Не для живых -";
+        break;
+    case 23:
+        texte = "Темный Храм**Если ты призрак, ищущий работу, то тебе стоит зайти сюда и потусить с нами.";
+        break;
+    case 24:
+        texte = "С: Деревня Теней*З: Озеро Хайлия";
+        break;
+    case 25:
+        texte = "С: Кладбище с привидениями**Входа нет";
+        break;
+    case 26:
+        texte = "Деревня Теней";
+        break;
+    case 27:
+        texte = "Я продаю пустую бутылку за 100 рупий, не интересует?**          ? ДА ?           нет  ";
+        if ((gpJeu->getJoueur()->hasBouteille(0) && gpJeu->getZone() == 8) ||
+            (gpJeu->getJoueur()->hasBouteille(1) && gpJeu->getZone() == 5) ||
+            (gpJeu->getJoueur()->hasBouteille(2) && gpJeu->getZone() == 6))
+        {
+            id = 32;
+            chercheText();
             break;
-        case 11 : texte = "N: Link's Home*W: Hyrule Field*E: Forest Temple"; break;
-        case 12 : texte = "Mountain Temple**Not for cardiacs, scaredy-cats, and generally faint of heart."; break;
-        case 13 : texte = "W: Desert entrance*N: Mountain Temple"; break;
-        case 14 : texte = "N: Mountain Temple*S: Hyrule Field"; break;
-        case 15 : texte = "N: Death Mountain"; break;
-        case 16 : texte = "E: Forest Entrance"; break;
-        case 17 : texte = "S: Lake Hylia*E: Haunted Graveyard"; break;
-        case 18 : texte = "S: To Kakariko Village"; break;
-        case 19 : texte = "N: Kakariko Village"; break;
-        case 20 : texte = "N: Hyrule Field"; break;
-        case 21 : texte = "W: Fire Land"; break;
-        case 22 : texte = "E: Shadow Village*- Not for the living -"; break;
-        case 23 : texte = "Dark Temple**If you are a ghost, seeking a job, you'd better come here to hang out with us."; break;
-        case 24 : texte = "N: Shadow Village*W: Lake Hylia"; break;
-        case 25 : texte = "N: Haunted Graveyard**No entry"; break;
-        case 26 : texte = "Shadow Village"; break;
-        case 27 : texte = "I am selling a bottle for 100 rupees, are you interested?*              YES ?            no  "; 
-            if ((gpJeu->getJoueur()->hasBouteille(0) && gpJeu->getZone()==8)
-            || (gpJeu->getJoueur()->hasBouteille(1) && gpJeu->getZone()==5)
-            || (gpJeu->getJoueur()->hasBouteille(2) && gpJeu->getZone()==6)) {id=32; chercheText();break;}
-            if (gpJeu->getJoueur()->getRubis() + gpJeu->getJoueur()->getBoostRubis()<100) idsuiv=29;
-            else idsuiv=30;
+        }
+        if (gpJeu->getJoueur()->getRubis() + gpJeu->getJoueur()->getBoostRubis() < 100)
+            idsuiv = 29;
+        else
+            idsuiv = 30;
+        break;
+    case 28:
+        texte = "Я продаю пустую бутылку за 100 рупий, не интересует?**            да           ? НЕТ ?";
+        idsuiv = 31;
+        break;
+    case 29:
+        texte = "Приношу свои извинения, но у вас нехватает рупий для покупки.";
+        break;
+    case 30:
+        texte = "Благодарю, вот ваша бутылка.";
+        break;
+    case 31:
+        texte = "Возвращайтесь, если передумаете на счет покупки.";
+        break;
+    case 32:
+        texte = "Прошу прощения, но это была последняя бутылка.";
+        break;
+    case 33:
+        texte = "Ты получил пустую бутылку!!!**Она поможет тебе носить с собой разные зелья!!!";
+        break;
+    case 35:
+        texte = "У жителей этой деревни очень необычный диалект, ничего невозможно понять...";
+        break;
+    case 36:
+        texte = "@+@+@+@+@+@+@@@+*@=++=@=+@=+@=+=@*+@+@+@+=+=";
+        break;
+    case 37:
+        texte = "Сначала раздобудь разрешение Старосты, если хочешь пройти тут!!!";
+        break;
+    case 38:
+        texte = "Староста разрешил тебе пройти??? Г-р-р-р... Проходи уже!!!";
+        break;
+    case 39:
+        texte = "Прочь с дороги!!!";
+        break;
+    case 40:
+        texte = "Здесь не принято принимать гостей.";
+        break;
+    case 41:
+        texte = "Местные монстры не страшатся практически ничего, но к счастью, они нападают только на людей.";
+        break;
+    case 42:
+        texte = "Серьезно?*Ты понял, что я только что сказал?";
+        break;
+    case 43:
+        texte = "С: Пустыня и Деревня Герудо";
+        break;
+    case 44:
+        texte = "Ю: Озеро Хайлия*З: Замок Хайрула";
+        break;
+    case 45:
+        texte = "Какарико";
+        break;
+    case 46:
+        texte = "З: Замок Хайрула";
+        break;
+    case 47:
+        texte = "Какой чудесный день!!!";
+        break;
+    case 48:
+        texte = "Зачем я только согласилась ухаживать за этим гадюшником???*Я терпеть не могу кур!!!";
+        break;
+    case 49:
+        texte = "В магазине нашей деревни можно найти множество полезных вещей.";
+        break;
+    case 50:
+        texte = "Ю: Какарико*З: Пустыня*В: Гора Смерти";
+        break;
+    case 51:
+        texte = "Деревня Герудо";
+        break;
+    case 52:
+        texte = "Заблудился в пустыне?*Ты здесь:*                        X";
+        break;
+    case 54:
+        texte = "Ю: Замок Хайрула";
+        break;
+    case 55:
+        texte = "Пустынный Храм**Приходите опробовать нашу купальню.*(вода непригодна для питья)";
+        break;
+    case 56:
+        texte = "Лесной Храм**Спасите деревья, съешьте бобра!!!";
+        break;
+    case 57:
+        texte = "Водный Храм**Всем обязательно иметь при себе шапочку для купания.";
+        break;
+    case 58:
+        texte = "Ледяной Храм**Персонал напоминает вам, что здесь подземелье, а не каток.";
+        break;
+    case 59:
+        texte = "Вы еще не видели кузнеца этой деревни?*Говорят, что он обладает огромным мастерством улучшать снаряжение искателей приключений, и у него очень много клиентов.";
+        break;
+    case 60:
+        texte = "Храм находится в самой глубине пустыни, в древнем оазисе.";
+        break;
+    case 61:
+        texte = "Ю: Огненные Земли*В: Какарико";
+        break;
+    case 62:
+        texte = "Замок Хайрула";
+        break;
+    case 63:
+        texte = "В: Какарико";
+        break;
+    case 64:
+        texte = "З: Черепашья скала*В: Озеро Хайлия";
+        break;
+    case 65:
+        texte = "Тайный Храм**Здесь покоится легендарный меч Сокрушитель Зла, Меч Мастера.";
+        break;
+    case 66:
+        texte = "С: Кладбище с привидениями";
+        break;
+    case 67:
+        texte = "Ты нашел Карту Подземелья!!!*Нажми L2, чтобы посмотреть на карту.";
+        break;
+    case 68:
+        texte = "Ты нашел Компас!!!*Он покажет все сундуки и логово босса на твоей карте.";
+        break;
+    case 69:
+        texte = "Ты нашел Ключ от Зала Босса!!!";
+        break;
+    case 70:
+        texte = "Ты нашел небольшой ключ!!!*Подойди к двери, чтобы открыть ее.";
+        break;
+    case 71:
+        texte = "Ты нашел Перчатки!!!*Используя их, ты сможешь поднимать и бросать предметы нажатием кнопки B.";
+        break;
+    case 72:
+        texte = "Ты нашел Магический Кристалл!!!";
+        tmp = 7 - gpJeu->getJoueur()->nbCristaux();
+        os << tmp;
+        if (tmp == 6 && !gpJeu->getJoueur()->getAvancement())
+            buffer = "Для чего же он предназначен...?";
+        else if (tmp > 2)
+            buffer = "Осталось найти еще " + os.str() + "!!!";
+        else if (tmp == 2)
+            buffer = "Осталось найти еще два!!!";
+        else if (tmp == 1)
+            buffer = "Осталось найти еще один!!!";
+        else if (tmp == 0)
+            buffer = "Теперь у тебя есть все Кристаллы, скорее направляйся в Замок и спаси Зельду!!!";
+        break;
+    case 80:
+        texte = "Ты нашел Гарпун!!!*Используй его, чтобы преодолевать препятствия.";
+        break;
+    case 81:
+        texte = "Ты нашел Лампу!!!*Используй ее, чтобы зажечь огонь.*Для работы требуется топливо.";
+        break;
+    case 82:
+        texte = "Ты нашел Ласты!!!*Приготовь их перед спуском в воду.";
+        break;
+    case 83:
+        texte = "Ты нашел Магический Молот!!!*Используй его, чтобы разрушать преграды.";
+        break;
+    case 84:
+        texte = "Ты нашел Огненный Жезл!!!*Отныне ты можешь извергать мощное пламя.";
+        break;
+    case 85:
+        texte = "Ты нашел Ледяной Жезл!!!*Используй его, чтобы замораживать на расстоянии.";
+        break;
+    case 86:
+        texte = "Ты нашел Меч Мастера!!!*Даже Ганон не может устоять перед его могуществом!!! (теоретически)";
+        break;
+    case 87:
+        texte = "Поздравляю, Линк, тебе удалось спасти меня!!!***Давай быстрее найдем Ганона, мы должны вернуть Трифорс!";
+        break;
+    case 89:
+        texte = "Секретный проход за тронным залом приведет тебя к Ганону. Поторопись!";
+        break;
+    case 90:
+        texte = "Мы уже близко, за мной!";
+        break;
+    case 91:
+        texte = "Боюсь, что ты не сможешь победить Ганона с твоим нынешним оружием...*Иди и поговори со старостой деревни Какарико, я уверен, он что-нибудь придумает.";
+        break;
+    case 92:
+        texte = "Ганон прямо за этой дверью, я исцелю твои раны.";
+        break;
+    case 93:
+        texte = "Ганон все еще где-то в замке.";
+        break;
+    case 94:
+        texte = "Тебе стоит подождать принцессу Зельду!!!";
+        break;
+    case 95:
+        texte = "Не возникало ли у тебя странного ощущения, что ты случайно про кого-то забыл???";
+        break;
+    case 96:
+        texte = "Зельда ждет тебя!!!";
+        break;
+    case 97:
+        texte = "Ты нашел Трифорс!!!";
+        break;
+    case 98:
+        texte = "Ты нашел Книгу Мудоры!!!**Теперь ты понимаешь древний Хайлийский!!!";
+        break;
+    case 99:
+        texte = "Поздравляю, Линк! Ты нашел меня и в награду я дарю тебе Кулон богини Дин, она повысит твою защиту на одно очко.";
+        break;
+    case 100:
+        texte = "Поздравляю, Линк! Ты нашел меня и в награду я дарю тебе Кулон богини Нейрю, она повысит твою защиту на два очка!!!";
+        break;
+    case 101:
+        texte = "...";
+        break;
+    case 102:
+        texte = "Ты получил волшебный кулон!!!**Твоя защита увеличилась!!!";
+        break;
+    case 103:
+        texte = "Поздравляю, Линк! Ты нашел меня и в награду я удвою твое максимальное количество магии!!!";
+        break;
+    case 104:
+        texte = "Твое максимальное количество магии удвоено!!!";
+        break;
+    case 105:
+        texte = "Возвращайтесь, когда у вас будет пустая бутылка, и я продам вам красное зелье, восстанавливающее здоровье.";
+        break;
+    case 106:
+        texte = "Красное Зелье за 60 рупий, не интересует?**          ? ДА ?           нет  ";
+        if (gpJeu->getJoueur()->hasBouteille(0) != 1 &&
+            gpJeu->getJoueur()->hasBouteille(1) != 1 &&
+            gpJeu->getJoueur()->hasBouteille(2) != 1)
+        {
+            id = 105;
+            chercheText();
             break;
-        case 28 : texte = "I am selling a bottle for 100 rupees, are you interested?*              yes             NO ?"; idsuiv=31; break;
-        case 29 : texte = "Sorry, you don't have enough rupees"; break;
-        case 30 : texte = "Thank you, here is your bottle."; break;
-        case 31 : texte = "Come again if you change your mind."; break;
-        case 32 : texte = "Sorry, that was my only bottle."; break;
-        case 33 : texte = "You find an empty bottle!!!**It will help you to stock potions!!!"; break;
-        case 35 : texte = "The inhabitants of that village have a dialect out of the ordinary, I don't understand anything..."; break;
-        case 36 : texte = "@+@+@+@+@+@+@@@+*@=++=@=+@=+@=+=@*+@+@+@+=+="; break;
-        case 37 : texte = "Wangle chief's permit if you really want to pass!!!"; break;
-        case 38 : texte = "The chief allows you to pass??? Grrrr... So move along!!!"; break;
-        case 39 : texte = "Get out of my way!!!"; break;
-        case 40 : texte = "It's not common to have visitors around here."; break;
-        case 41 : texte = "Local monsters don't fear a lot of things, fortunately they only attack humans."; break;
-        case 42 : texte = "Really?*You understand what I say?"; break;
-        case 43 : texte = "N: Desert and Gerudo Village"; break;
-        case 44 : texte = "S: Lake Hylia*W: Hyrule Castle"; break;
-        case 45 : texte = "Kakariko Village"; break;
-        case 46 : texte = "W: Hyrule Castle"; break;
-        case 47 : texte = "What a good day!!!"; break;
-        case 48 : texte = "But why did I accept to take care of that rubbish???*I loathe hens!!!"; break;
-        case 49 : texte = "You can find a lot of things in the shop of this village."; break;
-        case 50 : texte = "S: Kakariko Village*W: Desert*E: Death Mountain"; break;
-        case 51 : texte = "Gerudo Village"; break;
-        case 52 : texte = "Lost in the desert?*You are here:*                        X"; break;
-        case 54 : texte = "S: To Hyrule Castle"; break;
-        case 55 : texte = "Desert Temple**Come to try our bath.*(water is not for drinking)"; break;
-        case 56 : texte = "Forest Temple**Save the trees, eat beaver!!!"; break;
-        case 57 : texte = "Lake Temple**Compulsory bathing cap."; break;
-        case 58 : texte = "Ice Temple**The staff wishes to remind you that a dungeon is not a ice rink."; break;
-        case 59 : texte = "Did you see the blacksmith of that village?*He is said to be very gifted to improve adventurers' equipment, a lot of people visit him."; break;
-        case 60 : texte = "The Temple is in the deepest desert, in an ancient oasis."; break;
-        case 61 : texte = "S: Fire Land*E: Kakariko Village"; break;
-        case 62 : texte = "Hyrule Castle"; break;
-        case 63 : texte = "E: Kakariko Village"; break;
-        case 64 : texte = "W: Turtle Rock*E: Lake Hylia"; break;
-        case 65 : texte = "Hidden Temple**Here rests the Sword of Evils Bane, the Master Sword."; break;
-        case 66 : texte = "N: To the Haunted Graveyard"; break;
-        case 67 : texte = "You find the Dungeon Map!!!*Press L2 to see the map."; break;
-        case 68 : texte = "You find the Compass!!!*You can locate the boss and chests on the plan."; break;
-        case 69 : texte = "You find the Boss Key!!!"; break;
-        case 70 : texte = "You find a small key!!!*Go near a door to open it."; break;
-        case 71 : texte = "You find the Gloves!!!*Use them to lift some object setting them up or pressing B."; break;
-        case 72 : 
-            texte = "You find a Magic Crystal!!!"; 
-            tmp = 7-gpJeu->getJoueur()->nbCristaux();
-            os << tmp;
-            if (tmp==6 && !gpJeu->getJoueur()->getAvancement()) buffer = "For what may it be used...?";
-            else if (tmp>2) buffer = "There are "+os.str()+" left to find!!!";
-            else if (tmp==2) buffer = "Only 2 left to find!!!";
-            else if (tmp==1) buffer = "You lack only one!!!";
-            else if (tmp==0) buffer = "You have all the crystals, run to the castle and save Zelda!!!";
+        }
+        if (gpJeu->getJoueur()->getRubis() + gpJeu->getJoueur()->getBoostRubis() < 60)
+            idsuiv = 29;
+        else
+            idsuiv = 108;
+        break;
+    case 107:
+        texte = "Красное Зелье за 60 рупий, не интересует?**            да           ? НЕТ ?";
+        break;
+    case 108:
+        texte = "Спасибо, вот ваше зелье.";
+        break;
+    case 109:
+        texte = "Ты получил красное зелье!!!*Выпей его, чтобы восстановить здоровье!!!";
+        break;
+    case 110:
+        texte = "Ты получил зеленое зелье!!!*Выпей его, чтобы восстановить магию!!!";
+        break;
+    case 111:
+        texte = "Ты получил синее зелье!!!*Выпей его, чтобы восстановить здоровье и магию!!!";
+        break;
+    case 112:
+        texte = "Здравствуйте, что вы хотели бы выпить?";
+        break;
+    case 113:
+        texte = "-И-и-и-к!- Поговаривают, что фея одарит зачарованными предметами... -И-и-и-к!- ...того искателя приключений, что сможет найти ее... -И-и-и-к!!!-";
+        break;
+    case 114:
+        texte = "Восполнить одно сердце за 10 рупий, устроит?**          ? ДА ?           нет  ";
+        if (gpJeu->getJoueur()->getVie() + gpJeu->getJoueur()->getBoostVie() == gpJeu->getJoueur()->getVieMax())
+        {
+            id = 128;
+            chercheText();
             break;
-        case 80 : texte = "You find the Hookshot!!!*Use it to overcome obstacles."; break;
-        case 81 : texte = "You find the Lantern!!!*Use it to shut up flames."; break;
-        case 82 : texte = "You find the Flippers!!!*Set them up to go in the water."; break;
-        case 83 : texte = "You find the Magic Hammer!!!*Use it to squash obstacles."; break;
-        case 84 : texte = "You find the Fire Rod!!!*From now on you are able to shoot out powerful flames."; break;
-        case 85 : texte = "You find the Ice Rod!!!*Use it to freeze anything from a distance."; break;
-        case 86 : texte = "You find the Master Sword!!!*Even Ganon could not stand up to its power!!! (in theory)"; break;
-        case 87 : texte = "Congratulation Link, you have succeeded in saving me!!!***Let's find Ganon quickly, we have to reclaim the Triforce!"; break;
-        case 89 : texte = "The secret passage behind the throne room leads to Ganon. Hurry up!"; break;
-        case 90 : texte = "We are very near, follow me!"; break;
-        case 91 : texte = "I'm afraid you are not able to defeat Ganon with your present weapons...*Go and speak to the chief of the village Kakariko, I am sure he will find a solution."; break;
-        case 92 : texte = "Ganon is just behind that door, I will cure your wounds."; break;
-        case 93 : texte = "Ganon is still somewhere in the castle."; break;
-        case 94 : texte = "You should wait princess Zelda!!!"; break;
-        case 95 : texte = "Wouldn't you have the spooky feeling to forget someone by any chance???"; break;
-        case 96 : texte = "Zelda is waiting for you!!!"; break;
-        case 97 : texte = "You find the Triforce!!!"; break;
-        case 98 : texte = "You find the book of Mudora!!!**From now on, you understand the ancient Hylian!!!"; break;
-        case 99 : texte = "Congratulation Link, for finding me. As a reward, I give you the Din Pendent, it raises your defense by one point."; break;
-        case 100 : texte = "Congratulation Link, for finding me. As a reward, I give you the Nayru Pendent, it rises your defense by two points!!!"; break;
-        case 101 : texte = "..."; break;
-        case 102 : texte = "You obtain a magic pendent!!!**Your defense just raised!!!"; break;
-        case 103 : texte = "Congratulation Link, for finding me. As a reward, I will double the busload of your magic meter!!!"; break;
-        case 104 : texte = "Your magic meter is twofold!!!"; break;
-        case 105 : texte = "Come back when you have an empty bottle and I will sell you a red potion which restores energy."; break;
-        case 106 : texte = "A red potion for 60 rupees, are you interested?*              YES ?            no  "; 
-            if (gpJeu->getJoueur()->hasBouteille(0)!=1
-            && gpJeu->getJoueur()->hasBouteille(1)!=1
-            && gpJeu->getJoueur()->hasBouteille(2)!=1) {id=105; chercheText();break;}
-            if (gpJeu->getJoueur()->getRubis() + gpJeu->getJoueur()->getBoostRubis()<60) idsuiv=29;
-            else idsuiv=108; break;
-        case 107 : texte = "A red potion for 60 rupees, are you interested?*              yes              NO ?"; break;
-        case 108 : texte = "Thank you, here is your potion.";break;
-        case 109 : texte = "You get a red potion!!!*Drink it to restore your energy!!!"; break;
-        case 110 : texte = "You get a green potion!!!*Drink it to restore your magic!!!"; break;
-        case 111 : texte = "You get a blue potion!!!*Drink it to restore your energy and your magic!!!"; break;
-        case 112 : texte = "Hello, what would you like to drink?"; break;
-        case 113 : texte = "-Hiccup!- A fairy is said to give enchanted objects... -Hiccup!- ...to the adventurers who would find her... -Hiccup!!!-"; break;
-        case 114 : texte = "One heart for 10 rupees, ok?**              YES ?            no  "; 
-            if (gpJeu->getJoueur()->getVie()+gpJeu->getJoueur()->getBoostVie()
-            == gpJeu->getJoueur()->getVieMax()) {id=128; chercheText();break;}
-            if (gpJeu->getJoueur()->getRubis() + gpJeu->getJoueur()->getBoostRubis()<10) idsuiv=29;
-            else idsuiv=129; break;
-        case 115 : texte = "One heart for 10 rupees, ok?**              yes              NO ?"; break;
-        case 116 : texte = "A little bit of magic for 20 rupees, ok?**              YES ?            no  "; 
-            if (gpJeu->getJoueur()->getMagie()+gpJeu->getJoueur()->getBoostMagie()
-            == gpJeu->getJoueur()->getMagieMax() || !gpJeu->getJoueur()->hasObjet(O_LANTERNE)) {
-                id=128; chercheText();break;}
-            if (gpJeu->getJoueur()->getRubis() + gpJeu->getJoueur()->getBoostRubis()<20) idsuiv=29;
-            else idsuiv=129; break;
-        case 117 : texte = "A little bit of magic for 20 rupees, ok?**              yes              NO ?"; break;
-        case 118 : texte = "Some magic for 30 rupees, ok?**              YES ?            no  "; 
-            if (gpJeu->getJoueur()->getMagie()+gpJeu->getJoueur()->getBoostMagie()
-            == gpJeu->getJoueur()->getMagieMax() || !gpJeu->getJoueur()->hasObjet(O_LANTERNE)) {
-                id=128; chercheText();break;}
-            if (gpJeu->getJoueur()->getRubis() + gpJeu->getJoueur()->getBoostRubis()<30) idsuiv=29;
-            else idsuiv=129; break;
-        case 119 : texte = "Some magic for 30 rupees, ok?**              yes              NO ?"; break;
-        case 120 : texte = "5 arrows for 30 rupees, ok?**              YES ?            no  "; 
-            if (gpJeu->getJoueur()->getFleche() == gpJeu->getJoueur()->getFlecheMax() 
-            || !gpJeu->getJoueur()->hasObjet(O_ARC)) {id=128; chercheText();break;}
-            if (gpJeu->getJoueur()->getRubis() + gpJeu->getJoueur()->getBoostRubis()<30) idsuiv=29;
-            else idsuiv=129; break;
-        case 121 : texte = "5 arrows for 30 rupees, ok?**              yes              NO ?"; break;
-        case 122 : texte = "One bomb for 30 rupees, ok?**              YES ?            no  "; 
-            if (gpJeu->getJoueur()->getBombe() == gpJeu->getJoueur()->getBombeMax() 
-            || !gpJeu->getJoueur()->hasObjet(O_SAC_BOMBES)) {id=128; chercheText();break;}
-            if (gpJeu->getJoueur()->getRubis() + gpJeu->getJoueur()->getBoostRubis()<30) idsuiv=29;
-            else idsuiv=129; break;
-        case 123 : texte = "One bomb for 30 rupees, ok?**              yes              NO ?"; break;
-        case 124 : texte = "One bow for 1000 rupees, ok?**              YES ?            no  "; 
-            idsuiv=29; break;
-        case 125 : texte = "One bow for 1000 rupees, ok?**              yes              NO ?"; break;
-        case 126 : texte = "One bow for 50 rupees, ok?**              YES ?            no  "; 
-            if (gpJeu->getJoueur()->getRubis() + gpJeu->getJoueur()->getBoostRubis()<50) idsuiv=29;
-            else idsuiv=129; break;
-        case 127 : texte = "One bow for 50 rupees, ok?**              yes              NO ?"; break;
-        case 128 : texte = "You don't need this right now."; break;
-        case 129 : texte = "Thank you."; break;
-        case 130 : texte = "You get the bow!!!*Use it to reach a distant target."; break;
-        case 131 : texte = "Choose what you want."; break;
-        case 132 : texte = "What???*You are in mission for the chief???*Okay, so I'm going to give you a discount for the bow"; break;
-        case 133 : texte = "Hello Link, I am the chief of that village, I suspected you were coming."; idsuiv=134; break;
-        case 134 : texte = "Since this morning, monsters stride along Hyrule, I tried to talk about that with Zelda, but as you perhaps already saw, a powerful spell blocks the access to the castle..."; idsuiv=136; break;
-        case 136 : texte = "You say Ganon is responsible for all of that? He stole the Triforce and he holds the princess Zelda captive?"; idsuiv=137; break;
-        case 137 : texte = "Mmmm... The situation is more serious than I thought..."; idsuiv=138; break;
-        case 138 : texte = "We have to act very quickly, you must face Ganon again!"; idsuiv=139; break;
-        case 139 : texte = "How to go in the castle? I may have an idea..."; idsuiv=140; break;
-        case 140 : texte = "As you know, the power of the 7 wise men was locked in 7 crystals by wizard Aghanim when he was trying to open up the path to the Dark World, where Ganon was."; idsuiv=141; break;
-        case 141 : texte = "Yet, even if you raised the descendants of the 7 wise men from death after you defeated Ganon and found the Triforce, these crystals have kept their power."; idsuiv=142; break;
-        case 142 : texte = "They have been hidden deep in the 7 temples, gather them all, and you'll be able to get over Ganon's spell."; idsuiv=143; break;
-        case 143 : texte = "However that won't be easy, Ganon will surely send his best units to protect these crystals..."; idsuiv=144; break;
-        case 144 : texte = "A last thing, you won't go far with your present equipment. Go and see the arms dealer and tell him that you're coming on my behalf. He will probably make a gesture for you."; break;
-        case 145 : texte = "Go and see the arms dealer and tell him that you're coming on my behalf. He will probably make a gesture for you."; break;
-        case 146 : texte = "You have to gather the 7 crystals to have a chance to save Zelda and Hyrule..."; break;
-        case 147 : texte = "You found the 7 crystals? So go right now to the castle, first you have to deliver the princess, she will know better than I how to save Hyrule."; break;
-        case 148 : texte = "Your weapons are null and void against Ganon? Therefore, you have to find the Master Sword. It is said to have been concealed in a hidden temple.*Besides, the way leading to the Sword of Evils Bane is said to cross over a village populated by monsters...*I wonder if such a village exists..."; break;
-        case 150 : texte = "However, I'm afraid that your present equipment is inadequate to reach this temple, you may go to see the blacksmith of Gerudo village..."; break;
-        case 151 : texte = "It's about time to brave Ganon and take the Triforce back!"; break;
-        case 152 : texte = "Hey! You have to pay to open one of my chests!!!"; break;
-        case 153 : texte = "One of these chests contains a piece of heart, do you want to try for 10 rupees?*You will be allowed to open just one chest, ok?               YES ?            no  "; 
-            if (gpJeu->getJoueur()->getRubis() + gpJeu->getJoueur()->getBoostRubis()<10) idsuiv=29; break;
-        case 154 : texte = "One of these chests contains a piece of heart, do you want to try for 10 rupees?*You will be allowed to open just one chest, ok?               yes              NO ?"; break;
-        case 155 : texte = "Choose a chest."; break;
-        case 156 : texte = "I don't have anymore prizes to bring into play, sorry."; break;
-        case 157 : texte = "You lose! This chest is empty. Try again!"; break;
-        case 158 : texte = "Hello! If you are looking for the blacksmith, he lives a little farther."; break;
-        case 159 : texte = "Hello Link, I am the chief of this village.*You should go to see the blacksmith and show him what you want him to temper in your equipment.";
-            buffer = "I have been informed of your quest, so I have arranged it with him.*All will be free for you."; break;
-        case 160 : texte = "You don't need to drink this potion now."; break;
-        case 161 : texte = "A green potion for 40 rupees, are you interested?*              YES ?            no  "; 
-            if (gpJeu->getJoueur()->hasBouteille(0)!=1
-            && gpJeu->getJoueur()->hasBouteille(1)!=1
-            && gpJeu->getJoueur()->hasBouteille(2)!=1) {id=163; chercheText();break;}
-            if (gpJeu->getJoueur()->getRubis() + gpJeu->getJoueur()->getBoostRubis()<40) idsuiv=29;
-            else idsuiv=108; break;
-        case 162 : texte = "A green potion for 40 rupees, are you interested?*              yes              NO ?"; break;
-        case 163 : texte = "Come back when you have an empty bottle and I will sell you a green potion which restores magic."; break;
-        case 164 : texte = "Come back later, I am overbooked!"; break;
-        case 165 : texte = "May I do something for you?";
-            if (gpJeu->getJoueur()->getEpee()==1) {id=166; chercheText();break;}
-            if (gpJeu->getJoueur()->hasObjet(O_GANTS)==1 && gpJeu->getJoueur()->getObjet()==8) {
-                id=169; chercheText();break;}
-            if (gpJeu->getJoueur()->hasObjet(O_ARC)==2 && gpJeu->getJoueur()->getObjet()==0 
-            && gpJeu->getJoueur()->nbCristaux()==7) {
-                id=172; chercheText();break;}
+        }
+        if (gpJeu->getJoueur()->getRubis() + gpJeu->getJoueur()->getBoostRubis() < 10)
+            idsuiv = 29;
+        else
+            idsuiv = 129;
+        break;
+    case 115:
+        texte = "Восполнить одно сердце за 10 рупий, устроит?**            да           ? НЕТ ?";
+        break;
+    case 116:
+        texte = "Чуточку магии за 20 рупий, не желаете?**          ? ДА ?           нет  ";
+        if (gpJeu->getJoueur()->getMagie() + gpJeu->getJoueur()->getBoostMagie() == gpJeu->getJoueur()->getMagieMax() ||
+            !gpJeu->getJoueur()->hasObjet(O_LANTERNE))
+        {
+            id = 128;
+            chercheText();
             break;
-        case 166 : texte = "Do you want me to temper your sword?**              YES ?            no  "; break;
-        case 167 : texte = "Do you want me to temper your sword?**              yes              NO ?"; break;
-        case 168 : texte = "Your sword triples in power and you can now throw some magic attack, so good!!!*"; break;
-        case 169 : texte = "Do you want me to upgrade your gloves?**              YES ?            no  "; break;
-        case 170 : texte = "Do you want me to upgrade your gloves?**              yes              NO ?"; break;
-        case 171 : texte = "The power of your gloves helps you to lift heavy rocks."; break;
-        case 172 : texte = "Do you want me to upgrade your bow?**              YES ?            no  "; break;
-        case 173 : texte = "Do you want me to upgrade your bow?**              yes              NO ?"; break;
-        case 174 : texte = "Your bow now shoots silver arrows with a cataclysmic power!!!"; break;
-        case 175 : texte = "Come back when you have an empty bottle and I will sell you a blue potion which restores energy and magic."; break;
-        case 176 : texte = "A blue potion for 160 rupees, are you interested?*              YES ?            no  "; 
-            if (gpJeu->getJoueur()->hasBouteille(0)!=1
-            && gpJeu->getJoueur()->hasBouteille(1)!=1
-            && gpJeu->getJoueur()->hasBouteille(2)!=1) {id=175; chercheText();break;}
-            if (gpJeu->getJoueur()->getRubis() + gpJeu->getJoueur()->getBoostRubis()<160) idsuiv=29;
-            else idsuiv=108; break;
-        case 177 : texte = "A blue potion for 160 rupees, are you interested?*              yes              NO ?"; break;
-        case 178 : texte = "Our village has been constituted in the aim to stop careless adventurers from reaching the temple, I don't allow just anyone to pass."; break;
-        case 179 : texte = "Mmmm... You already found 4 crystals?*I have got to admit you impress me...";
-            buffer = "All right, you are allowed to cross over the graveyard, at your own risk."; break;
-        case 181 : texte = "Talk to the guard at the north of the village, he will let you pass."; break;
-        case 182 : texte = "I see you're still alive...*Surprising."; break;
-        case 183 : texte = "The dark temple is the starting point of the way reaching a legendary object. This village just exists to dissuade adventurers from approaching."; break;
-        case 184 : texte = "So you found the Sword?*But don't believe it is yours for all that.";
-            buffer = "The Master Sword is among the most treasured heritage of Hyrule with the Triforce, you will have to bring it back in his sanctuary when your mission is completed."; break;
-        case 186 : texte = "All the inhabitants of this village are spirits who responded to princess Zelda's call."; break;
-        case 187 : texte = "When you returned peace to Hyrule and reunified the Light World with the Golden Land, Zelda secretly asked volunteer spirits to create this village to block";
-            buffer = "the access to a very high valued object."; break;
-        
-        case 189 : texte = "Welcome Link!*Let me explain to you what I am doing here."; idsuiv=190; break;
-        case 190 : texte = "As you certainly have noticed, monsters appeared in Hyrule. It's the first time I can see monsters since your victory on Ganon."; idsuiv=191; break;
-        case 191 : texte = "Well, I have decided to list all of them."; idsuiv=192; break;
-        case 192 : texte = "Unfortunately, I'm really too fearful to meet them, so I need your help."; idsuiv=193; break;
-        case 193 : texte = "You have to fight each kind of monster and come to give me your report."; idsuiv=194; break;
-        case 194 : texte = "Each time you have defeated 7 new kinds of enemies, I will give you one piece of heart."; idsuiv=195; break;
-        case 195 : texte = "If you want to see what enemies you've already defeated, press L1."; break;
-        
-        
-        case 196 : 
-            if (gpJeu->getJoueur()->getCoeur(43)) {
-                if (gpJeu->getJoueur()->nbEnnemis() >= 46) {id=205; chercheText();return;}
-                else {id=204; chercheText();return;}
+        }
+        if (gpJeu->getJoueur()->getRubis() + gpJeu->getJoueur()->getBoostRubis() < 20)
+            idsuiv = 29;
+        else
+            idsuiv = 129;
+        break;
+    case 117:
+        texte = "Чуточку магии за 20 рупий, не желаете?**            да           ? НЕТ ?";
+        break;
+    case 118:
+        texte = "Немного магии за 30 рупий, идет?**          ? ДА ?           нет  ";
+        if (gpJeu->getJoueur()->getMagie() + gpJeu->getJoueur()->getBoostMagie() == gpJeu->getJoueur()->getMagieMax() ||
+            !gpJeu->getJoueur()->hasObjet(O_LANTERNE))
+        {
+            id = 128;
+            chercheText();
+            break;
+        }
+        if (gpJeu->getJoueur()->getRubis() + gpJeu->getJoueur()->getBoostRubis() < 30)
+            idsuiv = 29;
+        else
+            idsuiv = 129;
+        break;
+    case 119:
+        texte = "Немного магии за 30 рупий, идет?**            да           ? НЕТ ?";
+        break;
+    case 120:
+        texte = "5 стрел за 30 рупий, возьмете?**          ? ДА ?           нет  ";
+        if (gpJeu->getJoueur()->getFleche() == gpJeu->getJoueur()->getFlecheMax() ||
+            !gpJeu->getJoueur()->hasObjet(O_ARC))
+        {
+            id = 128;
+            chercheText();
+            break;
+        }
+        if (gpJeu->getJoueur()->getRubis() + gpJeu->getJoueur()->getBoostRubis() < 30)
+            idsuiv = 29;
+        else
+            idsuiv = 129;
+        break;
+    case 121:
+        texte = "5 стрел за 30 рупий, возьмете?**            да           ? НЕТ ?";
+        break;
+    case 122:
+        texte = "Одна бомба за 30 рупий, купите?**          ? ДА ?           нет  ";
+        if (gpJeu->getJoueur()->getBombe() == gpJeu->getJoueur()->getBombeMax() ||
+            !gpJeu->getJoueur()->hasObjet(O_SAC_BOMBES))
+        {
+            id = 128;
+            chercheText();
+            break;
+        }
+        if (gpJeu->getJoueur()->getRubis() + gpJeu->getJoueur()->getBoostRubis() < 30)
+            idsuiv = 29;
+        else
+            idsuiv = 129;
+        break;
+    case 123:
+        texte = "Одна бомба за 30 рупий, купите?**            да           ? НЕТ ?";
+        break;
+    case 124:
+        texte = "Лук за 1000 рупий, интересует?**          ? ДА ?           нет  ";
+        idsuiv = 29;
+        break;
+    case 125:
+        texte = "Лук за 1000 рупий, интересует?**            да           ? НЕТ ?";
+        break;
+    case 126:
+        texte = "Лук за 50 рупий, берете?**          ? ДА ?           нет  ";
+        if (gpJeu->getJoueur()->getRubis() + gpJeu->getJoueur()->getBoostRubis() < 50)
+            idsuiv = 29;
+        else
+            idsuiv = 129;
+        break;
+    case 127:
+        texte = "Лук за 50 рупий, берете?**            да           ? НЕТ ?";
+        break;
+    case 128:
+        texte = "Вам это сейчас ни к чему.";
+        break;
+    case 129:
+        texte = "Благодарю.";
+        break;
+    case 130:
+        texte = "Ты получил Лук!!!*Используй его, чтобы сразить цель на расстоянии.";
+        break;
+    case 131:
+        texte = "Выбирайте то, что вам нужно.";
+        break;
+    case 132:
+        texte = "Что??? У вас задание от нашего Старосты??? Хорошо... Я могу предложить скидку на этот замечательный лук.";
+        break;
+    case 133:
+        texte = "Приветствую тебя, Линк. Я - Староста этой деревни. Я ждал, что ты придешь.";
+        idsuiv = 134;
+        break;
+    case 134:
+        texte = "С самого утра по Хайрулу шастают монстры, я попытался обсудить это с Зельдой, но, как ты, возможно, уже заметил, мощное заклинание заблокировало вход в замок...";
+        idsuiv = 136;
+        break;
+    case 136:
+        texte = "Говоришь, что Ганон виновен во всем случившемся? Что он украл Трифорс и держит в заточении принцессу Зельду?";
+        idsuiv = 137;
+        break;
+    case 137:
+        texte = "Хмм... Обстановка куда серьезнее, чем я думал...";
+        idsuiv = 138;
+        break;
+    case 138:
+        texte = "Мы должны действовать очень быстро, тебе предстоит снова встретиться с Ганоном!";
+        idsuiv = 139;
+        break;
+    case 139:
+        texte = "Как пройти в замок?*Есть у меня одна идея...";
+        idsuiv = 140;
+        break;
+    case 140:
+        texte = "Как ты знаешь, сила Семи Мудрецов была заперта в семи кристаллах волшебником Аганимом, когда он стремился открыть путь в Темный мир, где обитал Ганон.";
+        idsuiv = 141;
+        break;
+    case 141:
+        texte = "Но даже несмотря на то, что ты воскресил потомков Семи Мудрецов, одержав победу над Ганоном, и нашел Трифорс, эти кристаллы все еще сохранили свою силу.";
+        idsuiv = 142;
+        break;
+    case 142:
+        texte = "Они были сокрыты в глубине семи храмов. Собери их все, и ты сможешь разрушить чары Ганона.";
+        idsuiv = 143;
+        break;
+    case 143:
+        texte = "Однако это будет нелегко: Ганон наверняка отправит своих лучших воинов на защиту этих кристаллов...";
+        idsuiv = 144;
+        break;
+    case 144:
+        texte = "И последнее: со своим нынешним снаряжением ты далеко не пройдешь. Зайди к торговцу оружием и скажи, что ты пришел по моему поручению. Возможно, он сделает для тебя выгодное предложение.";
+        break;
+    case 145:
+        texte = "Зайди к торговцу оружием и скажи, что ты пришел по моему поручению. Возможно, он сделает для тебя выгодное предложение.";
+        break;
+    case 146:
+        texte = "Тебе предстоит собрать Семь кристаллов, чтобы обрести шанс спасти Зельду и весь Хайрул...";
+        break;
+    case 147:
+        texte = "Ты нашел весь Семь кристаллов? Так что прямо сейчас отправляйся в замок, сначала тебе нужно вернуть принцессу, она лучше меня знает, как спасти Хайрул.";
+        break;
+    case 148:
+        texte = "Твое оружие бессильно против Ганона? Тогда тебе нужно найти Меч Мастера. Говорят, что он был спрятан в тайном храме.*Кроме того, говорят, что путь, ведущий к мечу Сокрушителю Зла, лежит через деревню, населенную монстрами...*Интересно, существует ли подобная деревня...";
+        break;
+    case 150:
+        texte = "Однако боюсь, что твоего нынешнего снаряжения не достаточно, чтобы добраться до этого храма, ты можешь посетить кузнеца деревни Герудо...";
+        break;
+    case 151:
+        texte = "Пришло время сразиться с Ганоном и вернуть Трифорс!";
+        break;
+    case 152:
+        texte = "Эй! Тебе следует заплатить, если хочешь открыть один из моих сундуков!!!";
+        break;
+    case 153:
+        texte = "В одном из сундуков лежит частица сердца. Хотите испытать удачу за 10 рупий?*Можно открыть только один сундук.*          ? ДА ?           нет  ";
+        if (gpJeu->getJoueur()->getRubis() + gpJeu->getJoueur()->getBoostRubis() < 10)
+            idsuiv = 29;
+        break;
+    case 154:
+        texte = "В одном из сундуков лежит частица сердца. Хотите испытать удачу за 10 рупий?*Можно открыть только один сундук.*            да           ? НЕТ ?";
+        break;
+    case 155:
+        texte = "Выбери сундук.";
+        break;
+    case 156:
+        texte = "У меня больше нет призов, чтобы их разыграть, извините.";
+        break;
+    case 157:
+        texte = "Ты проиграл! Этот сундук пуст. Попробуй еще!";
+        break;
+    case 158:
+        texte = "Здравствуйте! Если вы ищете кузнеца, то он живет немного дальше.";
+        break;
+    case 159:
+        texte = "Приветствую, Линк. Я - староста этой деревни.*Вам следует посетить нашего кузнеца и показать ему, чтобы вы хотели улучшить из своего снаряжения.";
+        buffer = "Мне сообщили о вашем задании и я договорился с ним.*Для вас все будет бесплатно.";
+        break;
+    case 160:
+        texte = "Сейчас вам не нужно пить это зелье.";
+        break;
+    case 161:
+        texte = "Зеленое зелье за 40 рупий, вам это интересно?**          ? ДА ?           нет  ";
+        if (gpJeu->getJoueur()->hasBouteille(0) != 1 &&
+            gpJeu->getJoueur()->hasBouteille(1) != 1 &&
+            gpJeu->getJoueur()->hasBouteille(2) != 1)
+        {
+            id = 163;
+            chercheText();
+            break;
+        }
+        if (gpJeu->getJoueur()->getRubis() + gpJeu->getJoueur()->getBoostRubis() < 40)
+            idsuiv = 29;
+        else
+            idsuiv = 108;
+        break;
+    case 162:
+        texte = "Зеленое зелье за 40 рупий, вам это интересно?**            да           ? НЕТ ?";
+        break;
+    case 163:
+        texte = "Возвращайтесь, когда у вас будет пустая бутылка, и я продам вам зеленое зелье, восстанавливающее магию.";
+        break;
+    case 164:
+        texte = "Приходите позже, сейчас у меня много работы!";
+        break;
+    case 165:
+        texte = "Могу я что-нибудь сделать для вас?";
+        if (gpJeu->getJoueur()->getEpee() == 1)
+        {
+            id = 166;
+            chercheText();
+            break;
+        }
+        if (gpJeu->getJoueur()->hasObjet(O_GANTS) == 1 &&
+            gpJeu->getJoueur()->getObjet() == 8)
+        {
+            id = 169;
+            chercheText();
+            break;
+        }
+        if (gpJeu->getJoueur()->hasObjet(O_ARC) == 2 &&
+            gpJeu->getJoueur()->getObjet() == 0 &&
+            gpJeu->getJoueur()->nbCristaux() == 7)
+        {
+            id = 172;
+            chercheText();
+            break;
+        }
+        break;
+    case 166:
+        texte = "Хотите, чтобы я закалил ваш меч?**          ? ДА ?           нет  ";
+        break;
+    case 167:
+        texte = "Хотите, чтобы я закалил ваш меч?**            да           ? НЕТ ?";
+        break;
+    case 168:
+        texte = "Сила вашего меча увеличится втрое, и вы сможете нанести какую-нибудь магическую атаку, это очень здорово!!!";
+        break;
+    case 169:
+        texte = "Хотите, чтобы я улучшил ваши перчатки?**          ? ДА ?           нет  ";
+        break;
+    case 170:
+        texte = "Хотите, чтобы я улучшил ваши перчатки?**            да           ? НЕТ ?";
+        break;
+    case 171:
+        texte = "Сила ваших перчаток позволит поднимать тяжелые камни.";
+        break;
+    case 172:
+        texte = "Хотите, чтобы я улучшил ваш лук?**          ? ДА ?           нет  ";
+        break;
+    case 173:
+        texte = "Хотите, чтобы я улучшил ваш лук?**            да           ? НЕТ ?";
+        break;
+    case 174:
+        texte = "Теперь ваш лук стреляет серебряными стрелами с чудовищной силой!!!";
+        break;
+    case 175:
+        texte = "Возвращайтесь, когда у вас будет пустая бутылка, и я смогу продать вам синее зелье, восстанавливающее здоровье и магию.";
+        break;
+    case 176:
+        texte = "Синее зелье за 160 рупий, вас устраивает?**          ? ДА ?           нет  ";
+        if (gpJeu->getJoueur()->hasBouteille(0) != 1 &&
+            gpJeu->getJoueur()->hasBouteille(1) != 1 &&
+            gpJeu->getJoueur()->hasBouteille(2) != 1)
+        {
+            id = 175;
+            chercheText();
+            break;
+        }
+        if (gpJeu->getJoueur()->getRubis() + gpJeu->getJoueur()->getBoostRubis() < 160)
+            idsuiv = 29;
+        else
+            idsuiv = 108;
+        break;
+    case 177:
+        texte = "Синее зелье за 160 рупий, вас устраивает?**            да           ? НЕТ ?";
+        break;
+    case 178:
+        texte = "Наша деревня была здесь основана, чтобы не позволить беспечным искателям приключений попасть в храм. Я никого не пропущу.";
+        break;
+    case 179:
+        texte = "Хммм... Вы уже нашли четыре кристалла?*Должен признать, вы произвели на меня впечатление...";
+        buffer = "Хорошо, вам разрешено пересечь кладбище на свой страх и риск.";
+        break;
+    case 181:
+        texte = "Поговорите со стражником на севере деревни, и он пропустит вас.";
+        break;
+    case 182:
+        texte = "Я вижу, что вы еще живы...*Удивительно.";
+        break;
+    case 183:
+        texte = "Темный Храм - это отправная точка на пути к легендарному предмету. Эта деревня существует лишь для того, чтобы отваживать искателей приключений от их дальнейшего пути к нему.";
+        break;
+    case 184:
+        texte = "Итак, вы нашли Меч?*Но не думайте, что теперь он принадлежит вам.";
+        buffer = "Меч Мастера - одно из самых ценнейших достояний Хайрула вместе с Трифорсом, и вам придется вернуть его обратно в святилище, когда ваша миссия будет завершена.";
+        break;
+    case 186:
+        texte = "Все жители этой деревни - духи, откликнувшиеся на зов принцессы Зельды.";
+        break;
+    case 187:
+        texte = "Когда вы вернули мир в Хайрул и воссоединили Светлый мир с Золотой землей, Зельда тайно попросила духов-добровольцев создать эту деревню, чтобы закрыть доступ к столь ценному предмету.";
+        break;
+
+    case 189:
+        texte = "Добро пожаловать, Линк!*Позволь мне представить тебе то, чем я тут занимаюсь.";
+        idsuiv = 190;
+        break;
+    case 190:
+        texte = "Думаю, ты уже заметил, что монстры заполонили Хайрул. Впервые вижу здесь столько монстров с тех самых пор, как ты одолел Ганона.";
+        idsuiv = 191;
+        break;
+    case 191:
+        texte = "Что ж... Вот я и решил изучить их всех.";
+        idsuiv = 192;
+        break;
+    case 192:
+        texte = "Но, к сожалению, я очень боязливый и не могу встретиться с ними лицом к лицу, поэтому мне нужна твоя помощь.";
+        idsuiv = 193;
+        break;
+    case 193:
+        texte = "Тебе предстоит сразиться с монстром каждого вида и вернуться ко мне с отчетом.";
+        idsuiv = 194;
+        break;
+    case 194:
+        texte = "За каждую новую семерку изученных монстров я дам тебе в награду одну частицу сердца.";
+        idsuiv = 195;
+        break;
+    case 195:
+        texte = "Если желаешь посмотреть список побежденных монстров, то нажми L1.";
+        break;
+
+    case 196:
+        if (gpJeu->getJoueur()->getCoeur(43))
+        {
+            if (gpJeu->getJoueur()->nbEnnemis() >= 46)
+            {
+                id = 205;
+                chercheText();
+                return;
             }
-            for (int i = 38; i < 44; i++) 
-                if (!gpJeu->getJoueur()->getCoeur(i) 
-                && (gpJeu->getJoueur()->nbEnnemis()/7)+37>=i) {
-                    id=203; chercheText();return;
-                }
-            tmp = 7-(gpJeu->getJoueur()->nbEnnemis()%7);
-            os << tmp;
-            if (tmp>1) texte = "Again "+os.str()+" different enemies before the next reward.";
-            else texte = "You just lack only one enemy before the next reward!!!";
-            break;
-        case 203 : texte = "Take this gift for your contribution on my project:"; break;
-        case 204 : texte = "I'm sorry, but I don't have a gift for you anymore..."; break;
-        case 205 : texte = "I can't take it in, you succeeded in defeating all kinds of enemies!!!*Congratulation Link!!!"; break;
-        
-        case 206 : texte = "                    Level 1:**                  Forest Temple"; break;
-        case 207 : texte = "                    Level 2:**                  Water Temple"; break;
-        case 208 : texte = "                    Level 3:**                 Mountain Temple"; break;
-        case 209 : texte = "                    Level 4:**                  Desert Temple"; break;
-        case 210 : texte = "                    Level 5:**                   Dark Temple"; break;
-        case 211 : texte = "                    Level 6:**                   Fire Temple"; break;
-        case 212 : texte = "                    Level 7:**                   Ice Temple"; break;
-        case 213 : texte = "                    Level ?:**                  Hidden Temple"; break;
-        case 214 : texte = "                  Last Level:**                 Hyrule Castle"; break;
-        
-        case 215 :texte = "                 Already tired?                  ?                 CONTINUE                 ?                   Save and quit                               Quit without saving            "; break;
-        case 216 :texte = "                 Already tired?                                    Continue                     ?               SAVE AND QUIT              ?                Quit without saving            "; break;
-        case 217 :texte = "                 Already tired?                                    Continue                                     Save and quit                  ?            QUIT WITHOUT SAVING           ?"; break;
-        
-        case 223 : texte = "At the right time when Link touched the Triforce, monsters disappeared and peace recurred.**Then Princess Zelda made a great decision: she touched in turn the Triforce and made her wish.**Triforce had always been the origin of troubles in the Kingdom, sooner or later, another evil creature would find it.**Just when princess touched the relic, it disappeared from Hyrule forever.";
-            buffer = "Since this day, Hyrule people have lived in peace, without fear of new disasters.**Thus the legend of Zelda, of the Triforce and of the Golden Land is achieved.**Master Sword is said to rest safely somewhere and to be the last heirloom of Link's quest..."; break;
-        case 224 : texte = "Congratulation Link, for finding me. As a reward, I give you the Farore Pendent, it raises your defense by one point..."; break;
-        case 225 : texte = "Do you want to save your game?**                    ? YES ?*                      no  "; break;
-        case 226 : texte = "Do you want to save your game?**                      yes  *                    ? NO ?"; break;
-        case 227 : texte = "Game saved."; break;
-        
-        case 228 : texte = "The Kingdom of Hyrule has been in peace since Link, the last knight of Hyrule, had defeated the malicious Ganon and reclaimed the precious Triforce to him."; idsuiv = 229; break;
-        case 229 : texte = "Nobody knows what Link's wish to the Triforce was, but it had the effect of reunifying the Light and Dark World, and upraising the 7 wise men's descendants."; idsuiv = 230; break;
-        case 230 : texte = "Next, Link handed Triforce and Master Sword over to Princess Zelda, and people started to believe that peace would last.*But the people were wrong..."; idsuiv=231; break;
-        case 231 : texte = "Unfortunately, Link's wish also had negative effects. Ganon and his henchmen were resurrected and got ready to attack."; idsuiv=232; break;
-        case 232 : texte = "Somewhere in Hyrule Forest, Link is sleeping without suspecting that Ganon has already moved into the attack, until a"; 
-            buffer="well-known voice talk to him during his sleep..."; break;
-        case 233 : texte = "Help me!*Help me!*That's me! Zelda!*I'm talking to you by telepathy."; idsuiv = 234; break;
-        case 234 : texte = "I am a prisoner in the dungeon of the castle!*I need your help!*Ganon is back, and he surely has already found the Triforce..."; idsuiv=235; break;
-        case 235 : texte = "Come quickly to the castle Link, you are my only hope..."; break;
-        case 236 : texte = "HELP: Press SELECT to consult help."; break;
+            else
+            {
+                id = 204;
+                chercheText();
+                return;
+            }
+        }
+        for (int i = 38; i < 44; i++)
+            if (!gpJeu->getJoueur()->getCoeur(i) &&
+                (gpJeu->getJoueur()->nbEnnemis() / 7) + 37 >= i)
+            {
+                id = 203;
+                chercheText();
+                return;
+            }
+        tmp = 7 - (gpJeu->getJoueur()->nbEnnemis() % 7);
+        os << tmp;
+        if (tmp > 1)
+            texte = "Срази еще " + os.str() + " разных монстров для получения новой награды.";
+        else
+            texte = "Тебе осталось сразить еще одного монстра для получения следующей награды!!!";
+        break;
+    case 203:
+        texte = "Прими эту награду за свой вклад в мой проект!";
+        break;
+    case 204:
+        texte = "Прошу простить меня, но мне больше нечего тебе подарить...";
+        break;
+    case 205:
+        texte = "Я не могу в это поверить, но ты смог одолеть все виды монстров!!!*Прими мои поздравления, Линк!!!";
+        break;
+
+    case 206:
+        texte = "                Уровень 1:**               Лесной Храм";
+        break;
+    case 207:
+        texte = "                Уровень 2:**               Водный Храм";
+        break;
+    case 208:
+        texte = "                Уровень 3:**               Горный Храм";
+        break;
+    case 209:
+        texte = "                Уровень 4:**              Пустынный Храм";
+        break;
+    case 210:
+        texte = "                Уровень 5:**               Темный Храм";
+        break;
+    case 211:
+        texte = "                Уровень 6:**               Огненный Храм";
+        break;
+    case 212:
+        texte = "                Уровень 7:**               Ледяной Храм";
+        break;
+    case 213:
+        texte = "                Уровень ?:**               Тайный Храм";
+        break;
+    case 214:
+        texte = "            Последний Уровень:**              Замок Хайрула";
+        break;
+
+    case 215:
+        texte = "              Вы уже устали?                       ?     ВЕРНУТЬСЯ     ?                      Сохранить и выйти                        Выйти не сохраняя           ";
+        break;
+    case 216:
+        texte = "              Вы уже устали?                             Вернуться                          ? СОХРАНИТЬ И ВЫЙТИ ?                      Выйти не сохраняя           ";
+        break;
+    case 217:
+        texte = "              Вы уже устали?                             Вернуться                            Сохранить и выйти                      ? ВЫЙТИ НЕ СОХРАНЯЯ ?         ";
+        break;
+
+    case 223:
+        texte = "В то время, как Линк коснулся Трифорса, монстры исчезли, и наступил мир.**И тогда принцесса Зельда приняла великое решение: она прикоснулась к Трифорсу и загадала свое желание.**Трифорс всегда был источником бед в Королевстве, рано или поздно его находило очередное порождение зла.**Как только принцесса прикоснулась к реликвии, она навсегда исчезла из Хайрула.";
+        buffer = "С этого дня жители Хайрула живут в мире, не опасаясь новых бедствий.**Так возникла легенда о Зельде, Трифорсе и Золотой земле.**Меч Мастера, говорят, покоится в безопасном месте и должен оставаться последним напоминанием о приключениях Линка...";
+        break;
+    case 224:
+        texte = "Поздравляю, Линк! Ты нашел меня и в качестве награды я дарю тебе Кулон богини Фароре. Он увеличит твою защиту на одно очко...";
+        break;
+    case 225:
+        texte = "Хочешь сохранить игру сейчас?**                 ? ДА ?*                   нет  ";
+        break;
+    case 226:
+        texte = "Хочешь сохранить игру сейчас?**                   да  *                 ? НЕТ ?";
+        break;
+    case 227:
+        texte = "Игра сохранена.";
+        break;
+
+    case 228:
+        texte = "Королевство Хайрул пребывает в мире с тех пор, как Линк, последний рыцарь Хайрула, победил злобного Ганона и отвоевал у него бесценный Трифорс.";
+        idsuiv = 229;
+        break;
+    case 229:
+        texte = "Никто не знает, какое желание загадал Линк Трифорсу, но в его последствии Светлый и Темный Миры воссоединились, а потомки Семи Мудрецов воскресли.";
+        idsuiv = 230;
+        break;
+    case 230:
+        texte = "Затем Линк передал Трифорс и Меч Мастера Принцессе Зельде и люди начали верить в то, что мир продлится долго.*Но, люди ошибались...";
+        idsuiv = 231;
+        break;
+    case 231:
+        texte = "К сожалению, желание Линка имело так же негативный эффект - Ганон и его приспешники воскресли и приготовились к новой атаке.";
+        idsuiv = 232;
+        break;
+    case 232:
+        texte = "Где-то в Лесах Хайрула спит Линк, ничего не подозревающий о том, что Ганон уже перешел в нападение, пока...*не услышал во сне такой хорошо знакомый голос...";
+        break;
+    case 233:
+        texte = "На помощь!*Спасите!*Это я! Зельда!*Я говорю с тобой телепатически.";
+        idsuiv = 234;
+        break;
+    case 234:
+        texte = "Меня заточили в подземелье замка!*Мне нужна твоя помощь!*Ганон вернулся, и он наверняка уже нашел Трифорс...";
+        idsuiv = 235;
+        break;
+    case 235:
+        texte = "Скорее отправляйся в замок, Линк, ты - моя единственная надежда...";
+        break;
+    case 236:
+        texte = "ПОМОЩЬ: Нажми SELECT, чтобы ознакомиться со справкой по игре.";
+        break;
     }
-    
-    
 }
 
-void Texte::affiche(SDL_Surface* gpScreen, std::string s, int a, int b) {
-    for (int i = 0; i < (int)s.length(); i++) {
-        afficheLettre(gpScreen, s.at(i),a,b);
-        a+=6;
-    }
+void Texte::affiche(SDL_Surface *gpScreen, std::string s, int a, int b)
+{
+    afficheLettre(gpScreen, s, a, b);
 }
 
-void Texte::draw(SDL_Surface* gpScreen) {
-    
-    if (cadre) drawCadre(gpScreen);
-    
-    if (id==3 && texte == "You find a piece of heart!!!") {
-        SDL_Rect src; SDL_Rect dst;
-        src.x=16*(gpJeu->getJoueur()->nbQuarts()%4);
-        if(src.x==0)src.x=16*4;
-        src.y=0; src.w=16; src.h=16; dst.x=160-8; dst.y=120-8+16*5;
+void Texte::draw(SDL_Surface *gpScreen)
+{
+    if (cadre)
+        drawCadre(gpScreen);
+
+    if (id == 3)
+    {
+        SDL_Rect src;
+        SDL_Rect dst;
+        src.x = 16 * (gpJeu->getJoueur()->nbQuarts() % 4);
+        if (src.x == 0)
+            src.x = 16 * 4;
+        src.y = 0;
+        src.w = 16;
+        src.h = 16;
+        dst.x = 160 - 8;
+        dst.y = 120 - 8 + 16 * 5;
         SDL_BlitSurface(imageCoeur, &src, gpScreen, &dst);
     }
-    
-    int a = x+8; int b = y+8;
-    for (int i = 0; i < av; i++) {
-        afficheLettre(gpScreen, texte.at(i),a,b);
-        a+=6;
-        if (a > x+w-16) {a=x+8; b+=16;}
+
+    int a = x + 8;
+    int b = y + 8;
+    for (int i = 0; i < av; i++)
+    {
+        afficheLettre(gpScreen, utf8utils::getChar(texte, i), a, b);
+        a += charWidth;
+        if (a > x + w - 16)
+        {
+            a = x + 8;
+            b += 16;
+        }
     }
-    
-    if(SDL_GetTicks() > lastAnimTime + vitesse && def && av < (int)texte.length()) {
+
+    if (SDL_GetTicks() > lastAnimTime + vitesse &&
+        def &&
+        av < utf8utils::getLength(texte))
+    {
         lastAnimTime = SDL_GetTicks();
-        do av++;
-        while (av < (int)texte.length() && texte.at(av-1) == ' ');
-        if (texte.at(av-1) != ' ') gpJeu->getAudio()->playSound(0,1);
+        do
+            av++;
+        while (av < utf8utils::getLength(texte) &&
+               utf8utils::getChar(texte, av - 1) == " ");
+        if (utf8utils::getChar(texte, av - 1) != " ")
+            gpJeu->getAudio()->playSound(0, 1);
     }
 }
 
-bool Texte::isFinished() {return (av==(int)texte.length());}
+bool Texte::isFinished() { return (av == utf8utils::getLength(texte)); }
 
-int Texte::getId() {return id;}
+int Texte::getId() { return id; }
 
-void Texte::changeId(int i) {
-    id=i; idsuiv=0; buffer="";
+void Texte::changeId(int i)
+{
+    id = i;
+    idsuiv = 0;
+    buffer.clear();
     chercheText();
     decoupeText();
-    if (av>(int)texte.length()) av=(int)texte.length();
+    if (av > utf8utils::getLength(texte))
+        av = utf8utils::getLength(texte);
 }
 
-void Texte::drawCadre(SDL_Surface* gpScreen) {
+void Texte::drawCadre(SDL_Surface *gpScreen)
+{
     SDL_Rect src;
     SDL_Rect dst;
-    
-    src.w=8; src.h=8; src.x = 103; src.y = 100; dst.x = x; dst.y = y;
+
+    src.w = 8;
+    src.h = 8;
+    src.x = 103;
+    src.y = 100;
+    dst.x = x;
+    dst.y = y;
     SDL_BlitSurface(imageFont, &src, gpScreen, &dst);
-    
+
     src.x = 112;
-    for (int i = 8; i < w-8; i+=16) {
-        dst.x = x+i; src.w=16;
-        while (dst.x + src.w > x+w && src.w>0) src.w--;
-        if (src.w>0) SDL_BlitSurface(imageFont, &src, gpScreen, &dst);
+    for (int i = 8; i < w - 8; i += 16)
+    {
+        dst.x = x + i;
+        src.w = 16;
+        while (dst.x + src.w > x + w && src.w > 0)
+            src.w--;
+        if (src.w > 0)
+            SDL_BlitSurface(imageFont, &src, gpScreen, &dst);
     }
-    
-    src.w=8; src.x = 129; dst.x = x+w-8;
+
+    src.w = 8;
+    src.x = 129;
+    dst.x = x + w - 8;
     SDL_BlitSurface(imageFont, &src, gpScreen, &dst);
-    
-    src.y = 109; src.w=8;
-    for (int j = 8; j < h-8; j+=16) {
+
+    src.y = 109;
+    src.w = 8;
+    for (int j = 8; j < h - 8; j += 16)
+    {
         dst.y = y + j;
-        src.x = 103; dst.x = x; src.h=16;
-        while (dst.y + src.h > y+h && src.h>0) src.h--;
-        if (src.h>0) SDL_BlitSurface(imageFont, &src, gpScreen, &dst);
-    
-        src.x = 129; dst.x = x+w-8;
-        if (src.h>0)SDL_BlitSurface(imageFont, &src, gpScreen, &dst);
+        src.x = 103;
+        dst.x = x;
+        src.h = 16;
+        while (dst.y + src.h > y + h && src.h > 0)
+            src.h--;
+        if (src.h > 0)
+            SDL_BlitSurface(imageFont, &src, gpScreen, &dst);
+
+        src.x = 129;
+        dst.x = x + w - 8;
+        if (src.h > 0)
+            SDL_BlitSurface(imageFont, &src, gpScreen, &dst);
     }
-    
-    src.h=8; src.x = 103; src.y = 126; dst.x = x; dst.y = y+h-8;
+
+    src.h = 8;
+    src.x = 103;
+    src.y = 126;
+    dst.x = x;
+    dst.y = y + h - 8;
     SDL_BlitSurface(imageFont, &src, gpScreen, &dst);
-    
+
     src.x = 112;
-    for (int i = 8; i < w-8; i+=16) {
-        dst.x = x+i; src.w=16;
-        while (dst.x + src.w > x+w && src.w>0) src.w--;
-        if (src.w>0) SDL_BlitSurface(imageFont, &src, gpScreen, &dst);
+    for (int i = 8; i < w - 8; i += 16)
+    {
+        dst.x = x + i;
+        src.w = 16;
+        while (dst.x + src.w > x + w && src.w > 0)
+            src.w--;
+        if (src.w > 0)
+            SDL_BlitSurface(imageFont, &src, gpScreen, &dst);
     }
-    
-    src.w=8; src.x = 129; dst.x = x+w-8;
+
+    src.w = 8;
+    src.x = 129;
+    dst.x = x + w - 8;
     SDL_BlitSurface(imageFont, &src, gpScreen, &dst);
 }
 
-void Texte::setTexte(int idTxt, int vx, int vy, int vw, int vh, bool cadr, bool defil, int vit) {
-    if (idTxt == 0) return;
-    id = idTxt; 
+void Texte::setTexte(int idTxt, int vx, int vy, int vw, int vh, bool cadr, bool defil, int vit)
+{
+    if (idTxt == 0)
+        return;
+    id = idTxt;
     idsuiv = 0;
-    buffer = "";
+    buffer.clear();
     chercheText();
-    
-    x = vx; y = vy; w = vw; h = vh;
+
+    x = vx;
+    y = vy;
+    w = vw;
+    h = vh;
     decoupeText();
-        
-    def=defil;
-    if (def) av = 0;
-    else av = texte.length();
-    
+
+    def = defil;
+    if (def)
+        av = 0;
+    else
+        av = utf8utils::getLength(texte);
+
     cadre = cadr;
-    
+
     vitesse = vit;
 }
 
-void Texte::decoupeText() {
-    //compte le nombre de caract�res possibles et largeur et en hauteur
-    int nbcol = (w-16)/6 -1;
-    int nblig = (h-16)/16;
-    int tailleMax = nbcol * nblig;
+void Texte::decoupeText()
+{
+    // compte le nombre de caractères possibles et largeur et en hauteur
+    int nbcol = (w - 16) / charWidth; // number of characters in a line
+    int nblig = (h - 16) / 16;        // lines count
+    int tailleMax = nbcol * nblig;    // total number of characters
     int taille;
-    
-    //parcours du texte � afficher; � chaque d�but de mot, 
-    //v�rifie que le mot peut tenir sur la ligne
-    for (int i = 0; i < (int)texte.length(); i++) {
-        
-        //supprime les espaces isol�s en d�but de ligne
-        if (texte.at(i)==' ' && texte.at(i+1)!=' ' && i%nbcol == 0) texte.erase(i,1);
-        //recherche du d�but du prochain mot
-        while(texte.at(i)==' ' && i < (int)texte.length()-1) i++;
-        
-        //saute une ligne si trouve une �toile
-        if (texte.at(i)=='*') {
-            texte.erase(i,1);//replace(i, 1, " ");
-            int nb = (nbcol)-(i%(nbcol));
-            for (int j = 0; j < nb; j++) texte.insert(i," ");
+
+    // parcours du texte a afficher; a chaque début de mot
+    // vérifie que le mot peut tenir sur la ligne
+    for (int i = 0; i < utf8utils::getLength(texte); i++)
+    {
+        // supprime les espaces isolès en dèbut de ligne
+        if (utf8utils::getChar(texte, i) == " " &&
+            utf8utils::getChar(texte, i + 1) != " " &&
+            i % nbcol == 0)
+        {
+            utf8utils::removeChar(texte, i);
+        }
+
+        // recherche du dèbut du prochain mot
+        while (utf8utils::getChar(texte, i) == " " &&
+               i < utf8utils::getLength(texte) - 1)
+            i++;
+
+        // saute une ligne si trouve une ètoile
+        if (utf8utils::getChar(texte, i) == "*")
+        {
+            utf8utils::removeChar(texte, i);
+            int nb = (nbcol) - (i % (nbcol));
+            for (int j = 0; j < nb; j++)
+                utf8utils::insert(texte, i, " ");
             continue;
         }
-        
-        //si le mot d�passe
+
+        // si le mot dèpasse
         taille = tailleMot(i);
-        if ((i%nbcol)+taille>nbcol) {
-            if  (i < tailleMax) {
-                //si le mot ne tient pas sur une ligne, on le coupe avec des tirets
-                if (taille>nbcol) {
-                    texte.insert(((i/nbcol)+1)*nbcol-1,"--");
-                    i = 1+((i/nbcol)+1)*nbcol;
+        if ((i % nbcol) + taille > nbcol)
+        {
+            if (i < tailleMax)
+            {
+                // si le mot ne tient pas sur une ligne, on le coupe avec des tirets
+                if (taille > nbcol)
+                {
+                    unsigned int pos = ((i / nbcol) + 1) * nbcol - 1;
+                    utf8utils::insert(texte, pos, "--");
+                    i = 1 + ((i / nbcol) + 1) * nbcol;
                 }
-                //sinon, on ajoute des espaces pour faire commencer le mot � la ligne
-                else while((i%nbcol) != 0) {texte.insert(i," "); i++;}
+                // sinon, on ajoute des espaces pour faire commencer le mot è la ligne
+                else
+                    while ((i % nbcol) != 0)
+                    {
+                        utf8utils::insert(texte, i, " ");
+                        i++;
+                    }
             }
         }
-        
     }
-    
+
     // si le texte est trop grand, on le coupe en deux
-    if ((int)texte.length() > tailleMax) {
-        buffer = texte.substr(tailleMax);
-        texte = texte.substr(0, tailleMax);
+    if (utf8utils::getLength(texte) > tailleMax)
+    {
+        buffer = utf8utils::subStr(texte, tailleMax);
+        utf8utils::eraseFrom(texte, tailleMax);
     }
 }
 
-int Texte::tailleMot(int deb) {
+int Texte::tailleMot(int deb)
+{
     int i = deb;
     int total = 0;
-    while (texte.at(i)!=' ') {total++; i++; if (i >= (int)texte.length()) return total;}
+    while (utf8utils::getChar(texte, i) != " ")
+    {
+        total++;
+        i++;
+        if (i >= utf8utils::getLength(texte))
+            return total;
+    }
     return total;
 }
 
-void Texte::afficheLettre(SDL_Surface* gpScreen, char c, int vx, int vy) {
-    SDL_Rect src;
+void Texte::afficheLettre(SDL_Surface *gpScreen, std::string c, int vx, int vy)
+{
     SDL_Rect dst;
-    
-    int val = (int)c;
-    
-    dst.x=vx; dst.y=vy;
-    src.h=16;src.w=8;
-    
-    if(val==32) return;
-    
-    // /
-    if(val==47) {src.x=52;src.y=151;}
-    
-    // @ hylien
-    if(val==64) {src.x=4;src.y=151;}
-            
-    // + hylien
-    if(val==43) {src.x=20;src.y=151;}
-            
-    // = hylien
-    if(val==61) {src.x=36;src.y=151;}
-            
-    //minuscules a-z
-    if(val>=97 && val<=122) {src.x=4+16*((val-97)%10); src.y=52+16*((val-97)/10);}
-            
-    //majuscules A-Z
-    if(val>=65 && val<=90) {src.x=6+16*((val-65)%10); src.y=2+16*((val-65)/10);}   
-    // �
-    if(val==-25) {src.x=148;src.y=34;}
-    // �
-    if(val==-23) {src.x=100;src.y=84;}
-    // �
-    if(val==-22) {src.x=116;src.y=84;}
-    // �
-    if(val==-24) {src.x=132;src.y=84;}
-    // �
-    if(val==-21) {src.x=132;src.y=151;}
-    // �
-    if(val==-32) {src.x=148;src.y=84;}
-    // �
-    if(val==-30) {src.x=148;src.y=103;}
-    // �
-    if(val==-28) {src.x=148;src.y=135;}
-    // �
-    if(val==-18) {src.x=84;src.y=119;}
-    // �
-    if(val==-17) {src.x=116;src.y=151;}
-    // �
-    if(val==-5) {src.x=84;src.y=103;}
-    // �
-    if(val==-7) {src.x=148;src.y=151;}
-    // �
-    if(val==-4) {src.x=116;src.y=135;}
-    // �
-    if(val==-10) {src.x=132;src.y=135;}
-    // �
-    if(val==-12) {src.x=148;src.y=119;}
-            
-    //ponctuation
-    // -
-    if(val==45) {src.x=102;src.y=34;}
-    // .
-    if(val==46) {src.x=118;src.y=34;}
-    // ,
-    if(val==44) {src.x=134;src.y=34;}
-    // !
-    if(val==33) {src.x=3;src.y=135;}
-    // ?
-    if(val==63) {src.x=19;src.y=135;}
-    // (
-    if(val==40) {src.x=35;src.y=135;}
-    // )
-    if(val==41) {src.x=51;src.y=135;}            
-    // ' ( avec @ )
-    if(val==39) {src.x=67;src.y=135;}
-    // :
-    if(val==58) {src.x=83;src.y=135;}
-    // ... ( avec % )
-    if(val==37) {src.x=101;src.y=135;}
-    // >
-    if(val==62) {src.x=100;src.y=151;}
-    // <
-    if(val==60) {src.x=84;src.y=151;}
-            
-    //chiffres            
-    if(val>=48 && val<=57) {src.x=3+16*((val-48)%5); src.y=103+16*((val-48)/5);}
-    
-    SDL_BlitSurface(imageFont, &src, gpScreen, &dst);
+
+    dst.x = vx;
+    dst.y = vy;
+
+    SDL_Surface *textSurfaceBG = TTF_RenderUTF8_Solid(textFontBG, c.c_str(), textColorBG);
+    SDL_BlitSurface(textSurfaceBG, NULL, gpScreen, &dst);
+    SDL_FreeSurface(textSurfaceBG);
+
+    dst.x++;
+    dst.y++;
+
+    SDL_Surface *textSurfaceFG = TTF_RenderUTF8_Solid(textFontFG, c.c_str(), textColorFG);
+    SDL_BlitSurface(textSurfaceFG, NULL, gpScreen, &dst);
+    SDL_FreeSurface(textSurfaceFG);
 }
 
-bool Texte::hasNext() {
-    return (buffer != "" || idsuiv > 0);
+bool Texte::hasNext()
+{
+    return (!buffer.empty() || (idsuiv > 0));
 }
 
-bool Texte::suite() {
-    if (av < (int)texte.length()) {
-        av = texte.length();
+bool Texte::suite()
+{
+    if (av < utf8utils::getLength(texte))
+    {
+        av = utf8utils::getLength(texte);
         return true;
     }
-    if (!hasNext()) {
+    if (!hasNext())
+    {
         gpJeu->getAudio()->playSound(18);
         return gpJeu->finTexte(id);
     }
-    if (buffer != "") {
+    if (!buffer.empty())
+    {
         texte = buffer;
-        buffer = "";
+        buffer.clear();
     }
-    else {
+    else
+    {
         id = idsuiv;
         idsuiv = 0;
         chercheText();
     }
     decoupeText();
-    if (def) av = 0;
-    else av = texte.length();
+    if (def)
+        av = 0;
+    else
+        av = utf8utils::getLength(texte);
     gpJeu->getAudio()->playSound(17);
     return true;
 }
