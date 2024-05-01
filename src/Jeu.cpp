@@ -2080,6 +2080,11 @@ void Jeu::ecrit(int id, bool anim, bool cadre, int x, int y, int w, int h)
 
 void Jeu::affiche(SDL_Surface *gpScreen, std::string s, int x, int y)
 {
+    if (x < 0 || y < 0)
+    {
+        return;
+    }
+
     gpTexte->affiche(gpScreen, s, x, y);
 }
 
