@@ -1,0 +1,20 @@
+#!/bin/sh
+# Standalone Ports Script Template
+
+# main configuration :
+GameName="Zelda Return Of The Hylian (Port)"
+GameDir="Zelda - Return Of The Hylian"
+GameExecutable="Zelda"
+GameDataFile=""
+
+# additional configuration
+KillAudioserver=1
+PerformanceMode=1
+
+# specific to this port :
+Arguments=""
+unset LD_PRELOAD
+cpuclock 1500
+
+# running command line :
+/mnt/SDCARD/Emu/PORTS/launch_standalone.sh "$GameName" "$GameDir" "$GameExecutable" "$Arguments" "$GameDataFile" "$KillAudioserver" "$PerformanceMode"

@@ -9,9 +9,10 @@ LDFLAGS =  -L../libs -L/opt/miyoomini-toolchain/arm-linux-gnueabihf/libc/usr/lib
 
 CC = arm-linux-gnueabihf-g++
 RM = rm -f
-INSTALL_PROG = install -m 755 -s
 
-EXE = ../Zelda
+BUILD_DIR := "../build/Roms/PORTS/Games/Zelda - Return Of The Hylian"
+
+EXE = $(BUILD_DIR)/Zelda
 
 OBJS = Audio.o Bouclier.o Caisse.o Carte.o Encyclopedie.o Ennemi.o Generique.o Jeu.o Joueur.o Keyboard.o Listable.o main.o Menu.o Monde.o Objet.o Personnage.o Pnj.o Projectile.o Snipe.o Statut.o Texte.o ZoneRect.o
 
@@ -85,12 +86,8 @@ ZoneRect.o : ZoneRect.cpp
 
 $(EXE) : $(OBJS)
 	$(CC) $(OBJS) -o $(EXE) $(LDFLAGS)
-
-install : $(EXE)
-	$(INSTALL_PROG) $(EXE) $(PREFIX)/bin
-
-uninstall :
-	$(RM) $(PREFIX)/bin/$(EXE)
+	mkdir -p $(BUILD_DIR)/libs
+	cp -r ../libs/* $(BUILD_DIR)/libs
 
 clean :
 	$(RM) $(OBJS) $(EXE)

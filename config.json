@@ -1,9 +1,0 @@
-{
-"label":"Zelda ROTH",
-"icon":"icon.png",
-"iconsel":"icon.png",
-"launch":"launch.sh",
-"useswap":1,
-"noaudiofix":1,
-"description":"Zelda - Return of the Hylian"
-}
