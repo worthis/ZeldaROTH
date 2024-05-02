@@ -83,18 +83,25 @@ void Generique::initLogo()
 void Generique::initTitre()
 {
     SDL_Rect dst;
-    SDL_Surface *fond = IMG_Load("data/images/logos/fond.png");
+    // SDL_Surface *fond = IMG_Load("data/images/logos/fond.png");
+    SDL_Surface *fond = IMG_Load("data/images/logos/title_background.png");
     dst.x = 0;
     dst.y = 0;
     SDL_BlitSurface(fond, NULL, image, &dst);
     SDL_FreeSurface(fond);
-    SDL_Surface *logo = IMG_Load("data/images/logos/titre.png");
-    SDL_SetColorKey(logo, SDL_SRCCOLORKEY, SDL_MapRGB(logo->format, 0, 0, 255));
-    logo = SDL_DisplayFormat(logo);
-    dst.x = 60;
-    dst.y = 56 - 32;
+
+    // SDL_Surface *logo = IMG_Load("data/images/logos/titre.png");
+    // SDL_SetColorKey(logo, SDL_SRCCOLORKEY, SDL_MapRGB(logo->format, 0, 0, 255));
+    // logo = SDL_DisplayFormat(logo);
+    SDL_Surface *logo = IMG_Load("data/images/logos/title_logo.png");
+    // dst.x = 60;
+    // dst.y = 56 - 32;
+    dst.x = 85;
+    dst.y = 8;
     SDL_BlitSurface(logo, NULL, image, &dst);
     SDL_FreeSurface(logo);
+
+    gpJeu->affiche(image, "Н А Ж М И Т Е     S T A R T", 110, 216);
 }
 
 void Generique::initSelection()
