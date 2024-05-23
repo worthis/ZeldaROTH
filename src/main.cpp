@@ -36,14 +36,21 @@ static void sigHandler(int sig)
 }
 
 SDL_Surface *init()
-{ // initialise SDL
+{
+    // initialise SDL
     if (SDL_Init(SDL_INIT_VIDEO) == -1)
     {
         printf("Could not load SDL : %s\n", SDL_GetError());
         exit(-1);
     }
 
-    TTF_Init();
+    // Initialize SDL_ttf
+    if (TTF_Init() == -1)
+    {
+        printf("SDL_ttf could not initialize! SDL_ttf Error: %s\n", TTF_GetError());
+        SDL_Quit();
+        exit(-1);
+    }
 
     return SDL_SetVideoMode(640, 480, 32, SDL_HWSURFACE | SDL_DOUBLEBUF | SDL_FULLSCREEN);
 }
@@ -70,7 +77,6 @@ int main(int argc, char **argv)
 
     gpScreen = init();
     SDL_Surface *gpScreen2 = SDL_CreateRGBSurface(SDL_HWSURFACE, 320, 240, 32, 0, 0, 0, 0);
-    SDL_Surface *gpScreen3 = NULL;
 
     Audio *gpAudio = new Audio();
     Jeu *gpJeu = new Jeu(gpAudio);
@@ -152,9 +158,9 @@ int main(int argc, char **argv)
             break;
         }
 
-        SDL_FreeSurface(gpScreen3);
-        gpScreen3 = zoomSurface(gpScreen2, 2, 2, 0);
-        SDL_BlitSurface(gpScreen3, &src, gpScreen, &dst);
+        SDL_Surface *tmp = zoomSurface(gpScreen2, 2, 2, 0);
+        SDL_BlitSurface(tmp, &src, gpScreen, &dst);
+        SDL_FreeSurface(tmp);
 
         SDL_Flip(gpScreen);
 
@@ -172,7 +178,6 @@ int main(int argc, char **argv)
 
     SDL_FreeSurface(gpScreen);
     SDL_FreeSurface(gpScreen2);
-    SDL_FreeSurface(gpScreen3);
 
     TTF_Quit();
     SDL_Quit();

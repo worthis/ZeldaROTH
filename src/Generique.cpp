@@ -810,7 +810,7 @@ void Generique::initRang(int i)
         l += 16;
         gpJeu->affiche(image, "Пройти игру: не умирая,", 72 - 8 - 16, l);
         l += 16;
-        gpJeu->affiche(image, "имея минимум десять сердец,", 72 - 8 - 16, l);
+        gpJeu->affiche(image, "имея десять сердец максимум,", 72 - 8 - 16, l);
         l += 16;
         gpJeu->affiche(image, "не встречаясь с Великими Феями,", 72 - 8 - 16, l);
         l += 16;
@@ -1005,7 +1005,7 @@ void Generique::initScore()
     oss.str("");
     oss << tmp;
     pctg += tmp;
-    gpJeu->affiche(image, ("Сразился со всеми видами монстров: " + oss.str() + " / 46").c_str(), 10, 110);
+    gpJeu->affiche(image, ("Поверженные виды врагов: " + oss.str() + " / 46").c_str(), 10, 110);
 
     pctg = (int)((pctg * 100) / 138);
     oss.str("");
